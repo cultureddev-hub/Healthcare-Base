@@ -8,14 +8,146 @@ import {
   User,
   CheckCircle2,
   ChevronRight,
+  ChevronLeft as ChevronLeftIcon,
   Search,
   ArrowLeft
 } from "lucide-react";
 import { useBooking } from "./booking-context";
+import { CustomSelect } from "./custom-select";
+
+export function BookingCalendar({
+  selectedDate,
+  onDateSelect,
+  selectedTime,
+  onTimeSelect,
+}: {
+  selectedDate: Date | null;
+  onDateSelect: (d: Date) => void;
+  selectedTime: string;
+  onTimeSelect: (t: string) => void;
+}) {
+  const [viewDate, setViewDate] = useState(() => new Date());
+
+  const MONTH_NAMES = [
+    "January","February","March","April","May","June",
+    "July","August","September","October","November","December",
+  ];
+  const DAY_LABELS = ["Su","Mo","Tu","We","Th","Fr","Sa"];
+
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+  const firstDayOfWeek = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const timeSlots = Array.from({ length: 37 }, (_, i) => {
+    const totalMins = i * 15;
+    const h = Math.floor(totalMins / 60) + 9;
+    const m = totalMins % 60;
+    return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+  });
+
+  const cells: (number | null)[] = [
+    ...Array(firstDayOfWeek).fill(null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ];
+
+  const prevMonth = () => setViewDate(new Date(year, month - 1, 1));
+  const nextMonth = () => setViewDate(new Date(year, month + 1, 1));
+
+  return (
+    <div className="flex flex-col md:flex-row rounded-2xl border border-white/10 overflow-hidden bg-white/5">
+      {/* Calendar side */}
+      <div className="flex-1 p-4">
+        {/* Month nav */}
+        <div className="flex items-center justify-between mb-4">
+          <button
+            onClick={prevMonth}
+            aria-label="Previous month"
+            className="w-11 h-11 flex items-center justify-center rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#3eb5bd]"
+          >
+            <ChevronLeftIcon size={16} />
+          </button>
+          <span className="text-sm font-semibold text-white">
+            {MONTH_NAMES[month]} {year}
+          </span>
+          <button
+            onClick={nextMonth}
+            aria-label="Next month"
+            className="w-11 h-11 flex items-center justify-center rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#3eb5bd]"
+          >
+            <ChevronRight size={16} />
+          </button>
+        </div>
+
+        {/* Day labels */}
+        <div className="grid grid-cols-7 mb-1">
+          {DAY_LABELS.map((d) => (
+            <div key={d} className="text-center text-xs font-bold text-slate-500 py-1">
+              {d}
+            </div>
+          ))}
+        </div>
+
+        {/* Day cells */}
+        <div className="grid grid-cols-7 gap-0.5">
+          {cells.map((day, i) => {
+            if (!day) return <div key={i} />;
+            const cellDate = new Date(year, month, day);
+            cellDate.setHours(0, 0, 0, 0);
+            const isPast = cellDate < today;
+            const isSelected =
+              selectedDate !== null &&
+              cellDate.toDateString() === selectedDate.toDateString();
+            const isToday = cellDate.toDateString() === today.toDateString();
+            return (
+              <button
+                key={i}
+                disabled={isPast}
+                onClick={() => onDateSelect(cellDate)}
+                className={`w-full aspect-square flex items-center justify-center rounded-lg text-sm transition-all
+                  ${isPast ? "text-slate-700 cursor-not-allowed" : "hover:bg-white/10 cursor-pointer"}
+                  ${isSelected ? "bg-[#3eb5bd] text-white font-bold hover:bg-[#3eb5bd]" : ""}
+                  ${isToday && !isSelected ? "border border-[#3eb5bd]/50 text-[#7fd3d7]" : ""}
+                  ${!isSelected && !isPast && !isToday ? "text-slate-300" : ""}
+                `}
+              >
+                {day}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Time slots side */}
+      <div className="md:w-36 border-t md:border-t-0 md:border-l border-white/10 max-h-64 overflow-y-auto p-3 no-scrollbar">
+        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 px-1">Time</p>
+        <div className="grid gap-1">
+          {timeSlots.map((t) => (
+            <button
+              key={t}
+              onClick={() => onTimeSelect(t)}
+              className={`text-xs min-h-[44px] px-2 rounded-lg border transition-all text-left cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#3eb5bd] ${
+                selectedTime === t
+                  ? "bg-[#3eb5bd]/20 border-[#3eb5bd] text-[#7fd3d7] font-semibold"
+                  : "bg-white/5 border-white/10 hover:bg-white/10 text-slate-400 hover:text-white"
+              }`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function BookingForm({ isModal = false }: { isModal?: boolean }) {
   const { selectedService } = useBooking();
   const [step, setStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Step 1 State
   const [searchQuery, setSearchQuery] = useState("");
@@ -25,7 +157,7 @@ export function BookingForm({ isModal = false }: { isModal?: boolean }) {
 
   // Step 2 State
   const [branch, setBranch] = useState("");
-  const [date, setDate] = useState("");
+  const [date, setDate] = useState<Date | null>(null);
   const [time, setTime] = useState("");
 
   // Step 3 State
@@ -90,8 +222,6 @@ export function BookingForm({ isModal = false }: { isModal?: boolean }) {
   };
 
   const BRANCHES = ["Chaweng", "Bangrak", "Rajabhat University"];
-  const DATES = ["Today", "Tomorrow", "Wed, 25", "Thu, 26"];
-  const TIMES = ["09:00 AM", "10:30 AM", "01:00 PM", "03:45 PM"];
 
   // Typewriter effect for search placeholder
   useEffect(() => {
@@ -124,33 +254,37 @@ export function BookingForm({ isModal = false }: { isModal?: boolean }) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    alert("Booking submitted successfully!");
-    setStep(1);
-    setSearchQuery("");
-    setDepartment("");
-    setService("");
-    setBranch("");
-    setDate("");
-    setTime("");
-    setFormData({
-      fullName: "",
-      whatsapp: "",
-      email: "",
-      nationality: "",
-      gender: "",
-      dob: "",
-      concerns: ""
-    });
+    setIsSubmitting(true);
+    // Simulate async submission
+    setTimeout(() => {
+      setIsSubmitting(false);
+      alert("Booking submitted successfully!");
+      setStep(1);
+      setSearchQuery("");
+      setDepartment("");
+      setService("");
+      setBranch("");
+      setDate(null);
+      setTime("");
+      setFormData({
+        fullName: "",
+        whatsapp: "",
+        email: "",
+        nationality: "",
+        gender: "",
+        dob: "",
+        concerns: ""
+      });
+    }, 1000);
   };
 
   return (
-    <div className={`${isModal ? 'bg-slate-900' : 'bg-white/5 border border-white/10 backdrop-blur-xl'} rounded-[2rem] p-6 md:p-8 shadow-2xl`}>
+    <div className={`${isModal ? 'bg-[#080708]' : 'bg-white/5 border border-white/10 backdrop-blur-xl'} rounded-[2rem] p-6 md:p-8 shadow-2xl`}>
             {/* Progress indicator */}
             <div className="flex items-center justify-between mb-8 relative">
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-white/10 rounded-full z-0"></div>
               <div
-                className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-blue-500 rounded-full z-0 transition-all duration-500"
+                className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-[#3eb5bd] rounded-full z-0 transition-all duration-500"
                 style={{ width: `${((step - 1) / 2) * 100}%` }}
               ></div>
 
@@ -159,7 +293,7 @@ export function BookingForm({ isModal = false }: { isModal?: boolean }) {
                   key={num}
                   className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors duration-300 ${
                     step >= num
-                      ? "bg-blue-500 text-white"
+                      ? "bg-[#3eb5bd] text-white"
                       : "bg-slate-800 text-slate-500 border border-white/10"
                   }`}
                 >
@@ -199,12 +333,12 @@ export function BookingForm({ isModal = false }: { isModal?: boolean }) {
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="block w-full pl-11 pr-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-transparent focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                            className="block w-full pl-11 pr-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-transparent focus:ring-2 focus:ring-[#3eb5bd] focus:border-transparent transition-all"
                             placeholder="Search..."
                           />
                           {!searchQuery && (
                             <div className="absolute inset-y-0 left-11 flex items-center pointer-events-none text-slate-400">
-                              Search <span className="ml-1 text-blue-400 font-medium">{SEARCH_PLACEHOLDERS[placeholderIndex]}</span>
+                              Search <span className="ml-1 text-[#5ec4cb] font-medium">{SEARCH_PLACEHOLDERS[placeholderIndex]}</span>
                             </div>
                           )}
                         </div>
@@ -223,43 +357,32 @@ export function BookingForm({ isModal = false }: { isModal?: boolean }) {
                         <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">
                           Department
                         </label>
-                        <select
+                        <CustomSelect
                           value={department}
-                          onChange={(e) => {
-                            setDepartment(e.target.value);
-                            setService(""); // Reset service when department changes
-                          }}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none appearance-none"
-                        >
-                          <option value="" className="text-slate-900">Select Department</option>
-                          {DEPARTMENTS.map(dept => (
-                            <option key={dept.id} value={dept.id} className="text-slate-900">{dept.name}</option>
-                          ))}
-                        </select>
+                          onChange={(v) => { setDepartment(v); setService(""); }}
+                          placeholder="Select Department"
+                          options={DEPARTMENTS.map(d => ({ value: d.id, label: d.name }))}
+                        />
                       </div>
 
                       <div>
                         <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">
                           Service
                         </label>
-                        <select
+                        <CustomSelect
                           value={service}
-                          onChange={(e) => setService(e.target.value)}
+                          onChange={setService}
                           disabled={!department}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none appearance-none disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <option value="" className="text-slate-900">Select Service</option>
-                          {department && SERVICES[department]?.map(srv => (
-                            <option key={srv.id} value={srv.id} className="text-slate-900">{srv.name}</option>
-                          ))}
-                        </select>
+                          placeholder="Select Service"
+                          options={department ? (SERVICES[department] ?? []).map(s => ({ value: s.id, label: s.name })) : []}
+                        />
                       </div>
                     </div>
 
                     <button
                       onClick={handleNext}
                       disabled={!searchQuery && !service}
-                      className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-500 text-white py-4 rounded-xl font-bold transition-colors flex items-center justify-center gap-2 mt-6"
+                      className="w-full bg-[#3eb5bd] hover:bg-[#35a0a8] disabled:bg-slate-700 disabled:text-slate-500 text-white py-4 rounded-xl font-bold transition-colors flex items-center justify-center gap-2 mt-6"
                     >
                       Continue <ChevronRight size={18} />
                     </button>
@@ -293,65 +416,40 @@ export function BookingForm({ isModal = false }: { isModal?: boolean }) {
                         <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">
                           Branch
                         </label>
-                        <select
+                        <CustomSelect
                           value={branch}
-                          onChange={(e) => setBranch(e.target.value)}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none appearance-none"
-                        >
-                          <option value="" className="text-slate-900">Select Branch</option>
-                          {BRANCHES.map(b => (
-                            <option key={b} value={b} className="text-slate-900">{b}</option>
-                          ))}
-                        </select>
+                          onChange={setBranch}
+                          placeholder="Select Branch"
+                          options={BRANCHES.map(b => ({ value: b, label: b }))}
+                        />
                       </div>
 
                       <div>
                         <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">
-                          Date
+                          Date &amp; Time
                         </label>
-                        <div className="grid grid-cols-2 gap-3">
-                          {DATES.map((d) => (
-                            <button
-                              key={d}
-                              onClick={() => setDate(d)}
-                              className={`py-3 px-4 rounded-xl border text-sm font-medium transition-all ${
-                                date === d
-                                  ? "bg-blue-500/20 border-blue-500 text-blue-400"
-                                  : "bg-white/5 border-white/10 hover:bg-white/10 text-slate-300"
-                              }`}
-                            >
-                              {d}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">
-                          Time
-                        </label>
-                        <div className="grid grid-cols-2 gap-3">
-                          {TIMES.map((t) => (
-                            <button
-                              key={t}
-                              onClick={() => setTime(t)}
-                              className={`py-3 px-4 rounded-xl border text-sm font-medium transition-all ${
-                                time === t
-                                  ? "bg-blue-500/20 border-blue-500 text-blue-400"
-                                  : "bg-white/5 border-white/10 hover:bg-white/10 text-slate-300"
-                              }`}
-                            >
-                              {t}
-                            </button>
-                          ))}
-                        </div>
+                        <BookingCalendar
+                          selectedDate={date}
+                          onDateSelect={setDate}
+                          selectedTime={time}
+                          onTimeSelect={setTime}
+                        />
+                        {date && time && (
+                          <p className="mt-3 text-xs text-slate-400 text-center">
+                            Booked for{" "}
+                            <span className="text-white font-semibold">
+                              {date.toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long" })}
+                            </span>{" "}
+                            at <span className="text-white font-semibold">{time}</span>
+                          </p>
+                        )}
                       </div>
                     </div>
 
                     <button
                       onClick={handleNext}
                       disabled={!branch || !date || !time}
-                      className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:text-slate-500 text-white py-4 rounded-xl font-bold transition-colors flex items-center justify-center gap-2 mt-6"
+                      className="w-full bg-[#3eb5bd] hover:bg-[#35a0a8] disabled:bg-slate-700 disabled:text-slate-500 text-white py-4 rounded-xl font-bold transition-colors flex items-center justify-center gap-2 mt-6"
                     >
                       Continue <ChevronRight size={18} />
                     </button>
@@ -381,56 +479,109 @@ export function BookingForm({ isModal = false }: { isModal?: boolean }) {
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
-                      <div>
+                      <div className="space-y-1">
+                        <label htmlFor="booking-fullname" className="text-xs font-bold text-slate-400 uppercase tracking-wider">Full Name</label>
                         <input
+                          id="booking-fullname"
                           type="text"
                           placeholder="Full Name"
                           required
                           value={formData.fullName}
                           onChange={(e) => setFormData({...formData, fullName: e.target.value})}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                        />
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <input
-                          type="tel"
-                          placeholder="WhatsApp Number"
-                          required
-                          value={formData.whatsapp}
-                          onChange={(e) => setFormData({...formData, whatsapp: e.target.value})}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                        />
-                        <input
-                          type="email"
-                          placeholder="Email Address"
-                          required
-                          value={formData.email}
-                          onChange={(e) => setFormData({...formData, email: e.target.value})}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-base placeholder-slate-500 focus:ring-2 focus:ring-[#3eb5bd] focus:border-transparent outline-none"
                         />
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
-                        <select
-                          required
+                        <div className="space-y-1">
+                          <label htmlFor="booking-whatsapp" className="text-xs font-bold text-slate-400 uppercase tracking-wider">WhatsApp</label>
+                          <input
+                            id="booking-whatsapp"
+                            type="tel"
+                            placeholder="+66 000 000 0000"
+                            required
+                            value={formData.whatsapp}
+                            onChange={(e) => setFormData({...formData, whatsapp: e.target.value})}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-base placeholder-slate-500 focus:ring-2 focus:ring-[#3eb5bd] focus:border-transparent outline-none"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label htmlFor="booking-email" className="text-xs font-bold text-slate-400 uppercase tracking-wider">Email</label>
+                          <input
+                            id="booking-email"
+                            type="email"
+                            placeholder="you@example.com"
+                            required
+                            value={formData.email}
+                            onChange={(e) => setFormData({...formData, email: e.target.value})}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-base placeholder-slate-500 focus:ring-2 focus:ring-[#3eb5bd] focus:border-transparent outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <CustomSelect
                           value={formData.nationality}
-                          onChange={(e) => setFormData({...formData, nationality: e.target.value})}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none appearance-none"
-                        >
-                          <option value="" className="text-slate-900">Nationality</option>
-                          <option value="us" className="text-slate-900">United States</option>
-                          <option value="uk" className="text-slate-900">United Kingdom</option>
-                          <option value="au" className="text-slate-900">Australia</option>
-                          <option value="other" className="text-slate-900">Other</option>
-                        </select>
-                        <input
-                          type="date"
-                          required
-                          value={formData.dob}
-                          onChange={(e) => setFormData({...formData, dob: e.target.value})}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                          onChange={(v) => setFormData({...formData, nationality: v})}
+                          placeholder="Nationality"
+                          options={[
+                            { value: "th", label: "Thailand" },
+                            { value: "us", label: "United States" },
+                            { value: "uk", label: "United Kingdom" },
+                            { value: "au", label: "Australia" },
+                            { value: "cn", label: "China" },
+                            { value: "ru", label: "Russia" },
+                            { value: "de", label: "Germany" },
+                            { value: "fr", label: "France" },
+                            { value: "it", label: "Italy" },
+                            { value: "es", label: "Spain" },
+                            { value: "se", label: "Sweden" },
+                            { value: "no", label: "Norway" },
+                            { value: "dk", label: "Denmark" },
+                            { value: "fi", label: "Finland" },
+                            { value: "nl", label: "Netherlands" },
+                            { value: "be", label: "Belgium" },
+                            { value: "ch", label: "Switzerland" },
+                            { value: "at", label: "Austria" },
+                            { value: "pl", label: "Poland" },
+                            { value: "cz", label: "Czech Republic" },
+                            { value: "ca", label: "Canada" },
+                            { value: "nz", label: "New Zealand" },
+                            { value: "za", label: "South Africa" },
+                            { value: "in", label: "India" },
+                            { value: "jp", label: "Japan" },
+                            { value: "kr", label: "South Korea" },
+                            { value: "sg", label: "Singapore" },
+                            { value: "my", label: "Malaysia" },
+                            { value: "id", label: "Indonesia" },
+                            { value: "ph", label: "Philippines" },
+                            { value: "vn", label: "Vietnam" },
+                            { value: "hk", label: "Hong Kong" },
+                            { value: "tw", label: "Taiwan" },
+                            { value: "il", label: "Israel" },
+                            { value: "ae", label: "United Arab Emirates" },
+                            { value: "sa", label: "Saudi Arabia" },
+                            { value: "br", label: "Brazil" },
+                            { value: "ar", label: "Argentina" },
+                            { value: "mx", label: "Mexico" },
+                            { value: "pt", label: "Portugal" },
+                            { value: "gr", label: "Greece" },
+                            { value: "ie", label: "Ireland" },
+                            { value: "ua", label: "Ukraine" },
+                            { value: "other", label: "Other" },
+                          ]}
                         />
+                        <div className="space-y-1">
+                          <label htmlFor="booking-dob" className="text-xs font-bold text-slate-400 uppercase tracking-wider">Date of Birth</label>
+                          <input
+                            id="booking-dob"
+                            type="date"
+                            required
+                            value={formData.dob}
+                            onChange={(e) => setFormData({...formData, dob: e.target.value})}
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-base placeholder-slate-500 focus:ring-2 focus:ring-[#3eb5bd] focus:border-transparent outline-none"
+                          />
+                        </div>
                       </div>
 
                       <div>
@@ -446,7 +597,7 @@ export function BookingForm({ isModal = false }: { isModal?: boolean }) {
                                 value={g}
                                 checked={formData.gender === g}
                                 onChange={(e) => setFormData({...formData, gender: e.target.value})}
-                                className="text-blue-500 focus:ring-blue-500 bg-white/5 border-white/10"
+                                className="text-[#3eb5bd] focus:ring-[#3eb5bd] bg-white/5 border-white/10"
                                 required
                               />
                               <span className="text-sm text-slate-300">{g}</span>
@@ -455,21 +606,31 @@ export function BookingForm({ isModal = false }: { isModal?: boolean }) {
                         </div>
                       </div>
 
-                      <div>
+                      <div className="space-y-1">
+                        <label htmlFor="booking-concerns" className="text-xs font-bold text-slate-400 uppercase tracking-wider">Medical Concerns <span className="normal-case font-normal">(optional)</span></label>
                         <textarea
-                          placeholder="Medical concern or symptoms (optional)"
+                          id="booking-concerns"
+                          placeholder="Describe your symptoms or reason for visit"
                           rows={3}
                           value={formData.concerns}
                           onChange={(e) => setFormData({...formData, concerns: e.target.value})}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-base placeholder-slate-500 focus:ring-2 focus:ring-[#3eb5bd] focus:border-transparent outline-none resize-none"
                         ></textarea>
                       </div>
 
                       <button
                         type="submit"
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-bold transition-colors flex items-center justify-center gap-2 mt-6"
+                        disabled={isSubmitting}
+                        className="w-full bg-[#3eb5bd] hover:bg-[#35a0a8] disabled:opacity-70 text-white py-4 rounded-xl font-bold transition-colors flex items-center justify-center gap-2 mt-6 cursor-pointer"
                       >
-                        Confirm Booking <CheckCircle2 size={18} />
+                        {isSubmitting ? (
+                          <>
+                            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                            Confirming...
+                          </>
+                        ) : (
+                          <>Confirm Booking <CheckCircle2 size={18} /></>
+                        )}
                       </button>
                     </form>
                   </motion.div>
@@ -483,12 +644,12 @@ export function BookingForm({ isModal = false }: { isModal?: boolean }) {
 export function BentoBooking() {
   return (
     <section
-      className="py-20 bg-slate-900 text-white overflow-hidden relative"
+      className="py-20 bg-[#080708] text-white overflow-hidden relative"
       id="fast-booking"
     >
       {/* Background decorative elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        <div className="absolute -top-[20%] -right-[10%] w-[50%] h-[50%] rounded-full bg-blue-600/20 blur-[120px]"></div>
+        <div className="absolute -top-[20%] -right-[10%] w-[50%] h-[50%] rounded-full bg-[#3eb5bd]/20 blur-[120px]"></div>
         <div className="absolute -bottom-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-emerald-500/20 blur-[120px]"></div>
       </div>
 
@@ -496,12 +657,12 @@ export function BentoBooking() {
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           {/* Left: Copy */}
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-medium mb-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#3eb5bd]/10 border border-[#3eb5bd]/20 text-[#5ec4cb] text-sm font-medium mb-6">
               <Calendar size={16} />
               <span>Fast Booking</span>
             </div>
             <h2 className="text-4xl md:text-5xl font-heading font-bold mb-6 leading-tight">
-              Book your visit in <span className="text-blue-400">under 2 minutes</span>
+              Book your visit in <span className="text-[#5ec4cb]">60 seconds</span>
             </h2>
             <p className="text-lg text-slate-300 mb-8 leading-relaxed">
               Our streamlined booking process gets you the care you need,
@@ -516,7 +677,7 @@ export function BentoBooking() {
                 "Insurance verified instantly",
               ].map((item, i) => (
                 <li key={i} className="flex items-center gap-3 text-slate-300">
-                  <CheckCircle2 className="text-emerald-400" size={20} />
+                  <CheckCircle2 className="text-[#3eb5bd]" size={20} />
                   <span>{item}</span>
                 </li>
               ))}

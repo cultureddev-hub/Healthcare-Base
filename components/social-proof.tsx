@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useReducedMotion } from "motion/react";
 import { motion, AnimatePresence } from "motion/react";
 import Image from "next/image";
 import {
@@ -22,150 +23,134 @@ import {
 import * as Dialog from "@radix-ui/react-dialog";
 
 export function Testimonials() {
+  const shouldReduceMotion = useReducedMotion();
   const testimonials = [
     {
       text: "The convenience of switching between online and in-person care is amazing. The doctors are always attentive and knowledgeable.",
       author: "John D.",
+      role: "Expat, Koh Samui",
       verified: true,
       img: "https://picsum.photos/seed/user1/100/100",
+      rating: 5,
     },
     {
-      text: "I love how I can consult with my doctor from home when I can't make it to the clinic. The service is excellent and the app is so easy to use.",
+      text: "I love how I can consult with my doctor from home when I can't make it to the clinic. The service is excellent and so easy to use.",
       author: "Sarah M.",
+      role: "Tourist, UK",
       verified: true,
       img: "https://picsum.photos/seed/user2/100/100",
+      rating: 5,
     },
     {
       text: "Finally, a healthcare provider that understands modern families. Booking appointments for my kids has never been easier.",
       author: "Emily R.",
+      role: "Resident, Thailand",
       verified: true,
       img: "https://picsum.photos/seed/user3/100/100",
+      rating: 5,
+    },
+    {
+      text: "Getting treatment at my hotel was painless. The doctor arrived within the hour and was incredibly professional.",
+      author: "Marco L.",
+      role: "Tourist, Italy",
+      verified: true,
+      img: "https://picsum.photos/seed/user4/100/100",
+      rating: 5,
+    },
+    {
+      text: "I needed a prescription fast. The pharmacist online consultation was quick, smooth, and I had my medication within hours.",
+      author: "Priya S.",
+      role: "Expat, India",
+      verified: true,
+      img: "https://picsum.photos/seed/user5/100/100",
+      rating: 5,
+    },
+    {
+      text: "After a beach accident I was worried about wound care. The team handled it brilliantly — clean, professional, and caring.",
+      author: "Jake W.",
+      role: "Tourist, Australia",
+      verified: true,
+      img: "https://picsum.photos/seed/user6/100/100",
+      rating: 5,
     },
   ];
 
-  const [currentIndex, setCurrentIndex] = useState(0);
+  // Duplicate for seamless loop
+  const row1 = [...testimonials, ...testimonials];
+  const row2 = [...testimonials.slice(3), ...testimonials.slice(0, 3), ...testimonials.slice(3), ...testimonials.slice(0, 3)];
 
-  const next = () =>
-    setCurrentIndex((prev) => (prev + 1) % testimonials.length);
-  const prev = () =>
-    setCurrentIndex(
-      (prev) => (prev - 1 + testimonials.length) % testimonials.length,
-    );
+  const TestimonialCard = ({ t }: { t: typeof testimonials[0] }) => (
+    <div className="w-[320px] shrink-0 bg-white rounded-3xl p-6 shadow-sm border border-slate-100 mx-3">
+      <div className="flex gap-0.5 mb-3">
+        {Array.from({ length: t.rating }).map((_, s) => (
+          <Star key={s} size={13} className="fill-amber-400 text-amber-400" />
+        ))}
+      </div>
+      <p className="text-slate-700 leading-relaxed mb-4 text-sm line-clamp-3">
+        &ldquo;{t.text}&rdquo;
+      </p>
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-full overflow-hidden relative shrink-0">
+          <Image src={t.img} alt={t.author} fill className="object-cover" referrerPolicy="no-referrer" />
+        </div>
+        <div>
+          <p className="font-bold text-[#080708] text-xs">{t.author}</p>
+          <p className="text-xs text-slate-400">{t.role}</p>
+        </div>
+        {t.verified && (
+          <div className="ml-auto flex items-center gap-1 text-xs font-bold text-[#3eb5bd]">
+            <CheckCircle2 size={11} /> Verified
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
   return (
-    <section className="py-20 bg-white overflow-hidden">
+    <section className="py-20 bg-[#fbfbfb] overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-12 gap-12 items-center">
-          {/* Left: Title & Controls */}
-          <div className="lg:col-span-4">
-            <div className="inline-block px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wider mb-6">
-              About Us
-            </div>
-            <h2 className="text-3xl md:text-5xl font-heading font-bold text-slate-900 mb-8 leading-tight">
-              What people <br />
-              are saying
-            </h2>
-
-            <div className="flex gap-4">
-              <button
-                onClick={prev}
-                className="w-12 h-12 rounded-full border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
-              >
-                <ChevronLeft size={24} />
-              </button>
-              <button
-                onClick={next}
-                className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20"
-              >
-                <ChevronRight size={24} />
-              </button>
-            </div>
+        <div className="text-center mb-16">
+          <div className="inline-block px-3 py-1 rounded-full bg-[#edf9fa] border border-[#c9eff2] text-[#2d9aa2] text-xs font-bold uppercase tracking-wider mb-6">
+            Testimonials
           </div>
+          <h2 className="text-3xl md:text-5xl font-heading font-bold text-[#080708] mb-4">
+            What People Are Saying
+          </h2>
+          <p className="text-slate-500 text-lg max-w-xl mx-auto">
+            Trusted by over 2,000 patients from around the world.
+          </p>
+        </div>
+      </div>
 
-          {/* Right: Cards Slider */}
-          <div className="lg:col-span-8 relative">
-            <div className="flex gap-6 overflow-hidden py-4">
-              <AnimatePresence mode="popLayout">
-                {testimonials.map((t, i) => {
-                  // Only show 2 cards on desktop, 1 on mobile
-                  if (
-                    i !== currentIndex &&
-                    i !== (currentIndex + 1) % testimonials.length
-                  )
-                    return null;
+      {/* Dual-row infinite marquee */}
+      <div className="relative">
+        {/* Edge fade overlays */}
+        <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-[#fbfbfb] to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-[#fbfbfb] to-transparent z-10 pointer-events-none" />
 
-                  const isPrimary = i === currentIndex;
+        {/* Row 1 — scrolls left */}
+        <div className="flex mb-4 overflow-hidden">
+          <motion.div
+            className="flex"
+            animate={shouldReduceMotion ? { x: "0%" } : { x: ["0%", "-50%"] }}
+            transition={shouldReduceMotion ? { duration: 0 } : { duration: 50, ease: "linear", repeat: Infinity }}
+            whileHover={shouldReduceMotion ? undefined : { animationPlayState: "paused" }}
+          >
+            {row1.map((t, i) => <TestimonialCard key={i} t={t} />)}
+          </motion.div>
+        </div>
 
-                  return (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, x: 50 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -50 }}
-                      transition={{ duration: 0.4 }}
-                      className={`min-w-full md:min-w-[calc(50%-12px)] rounded-3xl p-8 flex flex-col justify-between ${
-                        isPrimary
-                          ? "bg-blue-500 text-white shadow-xl"
-                          : "bg-slate-50 text-slate-900 border border-slate-100"
-                      }`}
-                    >
-                      <div>
-                        <div className="mb-6">
-                          <svg
-                            width="40"
-                            height="40"
-                            viewBox="0 0 40 40"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                            className={
-                              isPrimary ? "text-blue-300" : "text-slate-300"
-                            }
-                          >
-                            <path
-                              d="M16.6667 11.6667H10C8.15905 11.6667 6.66667 13.1591 6.66667 15V21.6667C6.66667 23.5076 8.15905 25 10 25H12.5C12.5 27.7614 10.2614 30 7.5 30C7.03976 30 6.66667 30.3731 6.66667 30.8333V33.3333C6.66667 33.7936 7.03976 34.1667 7.5 34.1667C12.5626 34.1667 16.6667 30.0626 16.6667 25V11.6667Z"
-                              fill="currentColor"
-                            />
-                            <path
-                              d="M33.3333 11.6667H26.6667C24.8257 11.6667 23.3333 13.1591 23.3333 15V21.6667C23.3333 23.5076 24.8257 25 26.6667 25H29.1667C29.1667 27.7614 26.9281 30 24.1667 30C23.7064 30 23.3333 30.3731 23.3333 30.8333V33.3333C23.3333 33.7936 23.7064 34.1667 24.1667 34.1667C29.2293 34.1667 33.3333 30.0626 33.3333 25V11.6667Z"
-                              fill="currentColor"
-                            />
-                          </svg>
-                        </div>
-                        <p
-                          className={`text-lg leading-relaxed mb-8 ${isPrimary ? "text-white" : "text-slate-700"}`}
-                        >
-                          &quot;{t.text}&quot;
-                        </p>
-                      </div>
-
-                      <div className="flex items-center justify-between mt-auto">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full overflow-hidden relative">
-                            <Image
-                              src={t.img}
-                              alt={t.author}
-                              fill
-                              className="object-cover"
-                              referrerPolicy="no-referrer"
-                            />
-                          </div>
-                          <span className="font-bold">{t.author}</span>
-                        </div>
-                        {t.verified && (
-                          <div
-                            className={`flex items-center gap-1 text-xs font-bold ${isPrimary ? "text-blue-200" : "text-blue-600"}`}
-                          >
-                            <CheckCircle2 size={14} />
-                            Verified Customer
-                          </div>
-                        )}
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </AnimatePresence>
-            </div>
-          </div>
+        {/* Row 2 — scrolls right */}
+        <div className="flex overflow-hidden">
+          <motion.div
+            className="flex"
+            animate={shouldReduceMotion ? { x: "-50%" } : { x: ["-50%", "0%"] }}
+            transition={shouldReduceMotion ? { duration: 0 } : { duration: 48, ease: "linear", repeat: Infinity }}
+            onMouseEnter={e => { if (!shouldReduceMotion) (e.currentTarget as HTMLElement).style.animationPlayState = "paused"; }}
+            onMouseLeave={e => { if (!shouldReduceMotion) (e.currentTarget as HTMLElement).style.animationPlayState = "running"; }}
+          >
+            {row2.map((t, i) => <TestimonialCard key={i} t={t} />)}
+          </motion.div>
         </div>
       </div>
     </section>
@@ -198,10 +183,10 @@ export function FAQ() {
     <section className="py-20 bg-[#fbfbfb]">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <div className="inline-block px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wider mb-6">
+          <div className="inline-block px-3 py-1 rounded-full bg-[#edf9fa] border border-[#c9eff2] text-[#2d9aa2] text-xs font-bold uppercase tracking-wider mb-6">
             FAQ
           </div>
-          <h2 className="text-3xl md:text-5xl font-heading font-bold text-slate-900">
+          <h2 className="text-3xl md:text-5xl font-heading font-bold text-[#080708]">
             Frequently Asked Questions
           </h2>
         </div>
@@ -210,15 +195,15 @@ export function FAQ() {
           {faqs.map((faq, i) => (
             <div
               key={i}
-              className={`border rounded-2xl overflow-hidden transition-colors ${openIndex === i ? "bg-white border-blue-200 shadow-sm" : "bg-transparent border-slate-200 hover:border-slate-300"}`}
+              className={`border rounded-2xl overflow-hidden transition-colors ${openIndex === i ? "bg-white border-[#c9eff2] shadow-sm" : "bg-transparent border-slate-200 hover:border-slate-300"}`}
             >
               <button
-                className="w-full px-6 py-5 flex items-center justify-between text-left focus:outline-none"
+                className="w-full px-6 py-5 flex items-center justify-between text-left cursor-pointer focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#3eb5bd] rounded-2xl"
                 onClick={() => setOpenIndex(openIndex === i ? null : i)}
               >
-                <span className="font-bold text-slate-900 pr-4">{faq.q}</span>
+                <span className="font-bold text-[#080708] pr-4">{faq.q}</span>
                 <div
-                  className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${openIndex === i ? "bg-blue-100 text-blue-600" : "bg-slate-100 text-slate-500"}`}
+                  className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${openIndex === i ? "bg-[#c9eff2] text-[#3eb5bd]" : "bg-slate-100 text-slate-500"}`}
                 >
                   {openIndex === i ? <Minus size={16} /> : <Plus size={16} />}
                 </div>
@@ -320,26 +305,18 @@ export function Blog() {
   });
 
   return (
-    <section className="py-20 bg-white">
+    <section className="py-20 bg-[#fbfbfb]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
-          <div>
-            <div className="inline-block px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wider mb-6">
-              Resources
-            </div>
-            <h2 className="text-3xl md:text-5xl font-heading font-bold text-slate-900">
-              Latest Articles
-            </h2>
+        <div className="text-center mb-12">
+          <div className="inline-block px-3 py-1 rounded-full bg-[#edf9fa] border border-[#c9eff2] text-[#2d9aa2] text-xs font-bold uppercase tracking-wider mb-6">
+            Resources
           </div>
-          <button 
-            onClick={() => setIsCatalogueOpen(true)}
-            className="text-blue-600 font-semibold flex items-center gap-2 hover:text-blue-700 transition-colors"
-          >
-            View All Posts <ArrowRight size={18} />
-          </button>
+          <h2 className="text-3xl md:text-5xl font-heading font-bold text-[#080708]">
+            Latest Articles
+          </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 -mx-4 px-4 no-scrollbar md:grid md:grid-cols-3 md:overflow-visible md:pb-0 md:mx-0 md:px-0 md:gap-8">
           {posts.slice(0, 3).map((post, i) => (
             <motion.div
               key={post.id}
@@ -347,10 +324,10 @@ export function Blog() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="group cursor-pointer flex flex-col h-full"
+              className="w-[78vw] min-w-[78vw] shrink-0 snap-start md:w-auto md:min-w-0 group cursor-pointer flex flex-col h-full bg-white rounded-3xl shadow-md hover:shadow-xl border border-slate-100/80 overflow-hidden transition-all duration-300 hover:-translate-y-1"
               onClick={() => setSelectedPost(post)}
             >
-              <div className="relative w-full aspect-[3/2] rounded-2xl overflow-hidden mb-4 shrink-0">
+              <div className="relative w-full aspect-[3/2] overflow-hidden shrink-0">
                 <Image
                   src={post.img}
                   alt={post.title}
@@ -359,19 +336,36 @@ export function Blog() {
                   referrerPolicy="no-referrer"
                 />
               </div>
-              <div className="flex items-center gap-3 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-                <span className="text-blue-600">{post.category}</span>
-                <span>•</span>
-                <span>{post.date}</span>
+              <div className="p-6 flex flex-col flex-grow">
+                <div className="flex items-center gap-3 text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
+                  <span className="text-[#3eb5bd]">{post.category}</span>
+                  <span>•</span>
+                  <span>{post.date}</span>
+                </div>
+                <h3 className="text-xl font-bold text-[#080708] group-hover:text-[#3eb5bd] transition-colors line-clamp-2 mb-3 flex-grow">
+                  {post.title}
+                </h3>
+                <p className="text-sm text-slate-600 line-clamp-2 mb-6">
+                  {post.content}
+                </p>
+                <div className="mt-auto pt-4 border-t border-slate-100 flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-[#c9eff2] flex items-center justify-center text-[#3eb5bd] shrink-0">
+                    <User size={14} />
+                  </div>
+                  <span className="font-semibold text-sm text-[#080708]">{post.author}</span>
+                </div>
               </div>
-              <h3 className="text-xl font-bold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-2 mb-3">
-                {post.title}
-              </h3>
-              <p className="text-sm text-slate-600 line-clamp-2 mt-auto">
-                {post.content}
-              </p>
             </motion.div>
           ))}
+        </div>
+
+        <div className="text-center mt-12">
+          <button
+            onClick={() => setIsCatalogueOpen(true)}
+            className="text-[#3eb5bd] font-semibold inline-flex items-center gap-2 hover:text-[#2d9aa2] transition-colors"
+          >
+            View All Posts <ArrowRight size={18} />
+          </button>
         </div>
       </div>
 
@@ -385,7 +379,7 @@ export function Blog() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm"
+                  className="fixed inset-0 z-50 bg-[#080708]/40 backdrop-blur-sm"
                 />
               </Dialog.Overlay>
               <Dialog.Content asChild>
@@ -404,13 +398,13 @@ export function Blog() {
                       className="object-cover"
                       referrerPolicy="no-referrer"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#080708]/80 to-transparent" />
                     <Dialog.Close className="absolute top-4 right-4 w-10 h-10 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-colors">
                       <X size={20} />
                     </Dialog.Close>
                     <div className="absolute bottom-6 left-6 right-6">
                       <div className="flex flex-wrap items-center gap-3 mb-3">
-                        <span className="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                        <span className="bg-[#3eb5bd] text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                           {selectedPost.category}
                         </span>
                         <span className="flex items-center gap-1 text-white/90 text-sm font-medium">
@@ -432,7 +426,7 @@ export function Blog() {
                     {/* Trust & Geo Tags */}
                     <div className="flex flex-wrap items-center gap-4 mb-8 pb-8 border-b border-slate-100">
                       <div className="flex items-center gap-2 text-slate-700">
-                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-[#c9eff2] flex items-center justify-center text-[#3eb5bd] shrink-0">
                           <User size={20} />
                         </div>
                         <div>
@@ -446,7 +440,7 @@ export function Blog() {
                         <span className="text-xs font-bold">Medically Reviewed</span>
                       </div>
                       <div className="flex items-center gap-2 text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-                        <MapPin size={16} className="text-blue-600" />
+                        <MapPin size={16} className="text-[#3eb5bd]" />
                         <span className="text-xs font-medium">Koh Samui, Thailand</span>
                       </div>
                     </div>
@@ -456,7 +450,7 @@ export function Blog() {
                         {selectedPost.content}
                       </p>
                       {/* Placeholder for more rich content */}
-                      <h3 className="text-xl font-bold text-slate-900 mt-8 mb-4">Why This Matters</h3>
+                      <h3 className="text-xl font-bold text-[#080708] mt-8 mb-4">Why This Matters</h3>
                       <p className="text-slate-600 leading-relaxed mb-6">
                         Taking proactive steps towards your health is the best investment you can make. Our team at Samui Home Clinic is dedicated to providing you with the most up-to-date information and personalized care to help you achieve your wellness goals.
                       </p>
@@ -487,7 +481,7 @@ export function Blog() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm"
+                  className="fixed inset-0 z-50 bg-[#080708]/40 backdrop-blur-sm"
                 />
               </Dialog.Overlay>
               <Dialog.Content asChild>
@@ -501,10 +495,10 @@ export function Blog() {
                   {/* Header & Search */}
                   <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-xl border-b border-slate-100 px-6 py-6 md:px-10">
                     <div className="flex items-center justify-between mb-6">
-                      <Dialog.Title className="text-2xl md:text-3xl font-heading font-bold text-slate-900">
+                      <Dialog.Title className="text-2xl md:text-3xl font-heading font-bold text-[#080708]">
                         Health & Wellness Articles
                       </Dialog.Title>
-                      <Dialog.Close className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 hover:text-slate-900 transition-colors">
+                      <Dialog.Close className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 hover:text-[#080708] transition-colors">
                         <X size={20} />
                       </Dialog.Close>
                     </div>
@@ -517,7 +511,7 @@ export function Blog() {
                           placeholder="Search articles by title or keyword..."
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
+                          className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 focus:border-[#3eb5bd] focus:ring-2 focus:ring-[#c9eff2] outline-none transition-all"
                         />
                       </div>
                       <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 hide-scrollbar shrink-0">
@@ -527,7 +521,7 @@ export function Blog() {
                             onClick={() => setSelectedCategory(cat)}
                             className={`px-4 py-3 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors ${
                               selectedCategory === cat
-                                ? "bg-slate-900 text-white"
+                                ? "bg-[#080708] text-white"
                                 : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                             }`}
                           >
@@ -559,7 +553,7 @@ export function Blog() {
                                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                                 referrerPolicy="no-referrer"
                               />
-                              <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-blue-600">
+                              <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-[#3eb5bd]">
                                 {post.category}
                               </div>
                             </div>
@@ -569,7 +563,7 @@ export function Blog() {
                                 <span>•</span>
                                 <span className="flex items-center gap-1"><Clock size={14} /> {post.readTime}</span>
                               </div>
-                              <h3 className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-2 mb-3">
+                              <h3 className="text-lg font-bold text-[#080708] group-hover:text-[#3eb5bd] transition-colors line-clamp-2 mb-3">
                                 {post.title}
                               </h3>
                               <p className="text-sm text-slate-600 line-clamp-2 mt-auto">
@@ -585,7 +579,7 @@ export function Blog() {
                         <p className="text-lg font-medium">No articles found matching your criteria.</p>
                         <button 
                           onClick={() => { setSearchQuery(""); setSelectedCategory("All"); }}
-                          className="mt-4 text-blue-600 font-semibold hover:underline"
+                          className="mt-4 text-[#3eb5bd] font-semibold hover:underline"
                         >
                           Clear filters
                         </button>

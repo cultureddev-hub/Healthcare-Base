@@ -151,25 +151,25 @@ export function Services() {
   };
 
   return (
-    <section className="py-20 bg-white" id="services">
+    <section className="py-20 bg-white scroll-mt-20" id="services">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
-        <div className="inline-block px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wider mb-6">
+        <div className="inline-block px-3 py-1 rounded-full bg-[#edf9fa] border border-[#c9eff2] text-[#2d9aa2] text-xs font-bold uppercase tracking-wider mb-6">
           Services
         </div>
-        <h2 className="text-3xl md:text-5xl font-heading font-bold text-slate-900 mb-16">
+        <h2 className="text-3xl md:text-5xl font-heading font-bold text-[#080708] mb-16">
           Our Comprehensive Services
         </h2>
 
         <div className="absolute right-4 sm:right-6 lg:right-8 top-0 mt-20 hidden md:flex gap-2">
           <button 
             onClick={scrollLeft}
-            className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+            className="w-10 h-10 rounded-full border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 hover:text-[#080708] transition-colors"
           >
             <ChevronLeft size={20} />
           </button>
           <button 
             onClick={scrollRight}
-            className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20"
+            className="w-10 h-10 rounded-full bg-[#3eb5bd] flex items-center justify-center text-white hover:bg-[#35a0a8] transition-colors shadow-lg shadow-[#3eb5bd]/20"
           >
             <ChevronRight size={20} />
           </button>
@@ -186,9 +186,9 @@ export function Services() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="group text-left flex flex-col h-full bg-slate-50 rounded-3xl overflow-hidden border border-slate-100 hover:shadow-xl transition-all duration-300 w-[300px] md:w-[350px] lg:w-[400px] aspect-square snap-start shrink-0"
+              className="group text-left flex flex-col bg-white rounded-3xl overflow-hidden border border-slate-200 hover:border-[#7fd3d7] hover:shadow-xl transition-all duration-300 w-[300px] md:w-[350px] snap-start shrink-0 cursor-pointer"
             >
-              <div className="relative h-[45%] overflow-hidden shrink-0">
+              <div className="relative h-48 overflow-hidden shrink-0">
                 <Image
                   src={service.img}
                   alt={service.title}
@@ -196,40 +196,36 @@ export function Services() {
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
                   referrerPolicy="no-referrer"
                 />
-                <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-slate-700 flex items-center gap-1 shadow-sm">
-                  <Clock size={12} className="text-blue-600" />
+                {/* Badges */}
+                <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-slate-700 flex items-center gap-1 shadow-sm">
+                  <Clock size={11} className="text-[#3eb5bd]" />
                   {service.duration}
                 </div>
-                <div className="absolute top-4 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold shadow-sm">
+                <div className="absolute top-3 right-3 bg-[#1D84D7] text-white px-2.5 py-1 rounded-full text-xs font-bold shadow-sm">
                   {service.price}
                 </div>
               </div>
 
-              <div className="p-6 flex flex-col flex-grow">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="bg-blue-100 p-2 rounded-lg text-blue-600">
-                    {service.icon}
-                  </div>
-                  <h3 className="text-xl font-bold text-slate-900 leading-tight">
-                    {service.title}
-                  </h3>
-                </div>
-                <p className="text-sm text-slate-600 leading-relaxed mb-6 flex-grow">
+              <div className="p-5 flex flex-col flex-grow">
+                <h3 className="text-lg font-bold text-[#080708] leading-tight mb-3">
+                  {service.title}
+                </h3>
+                <p className="text-sm text-slate-500 leading-relaxed mb-5 flex-grow">
                   {service.desc}
                 </p>
-                
-                <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-200">
-                  <button 
+
+                <div className="flex items-center gap-2 pt-4 border-t border-slate-100">
+                  <button
                     onClick={() => openServiceDetail(service)}
-                    className="text-sm font-semibold text-slate-500 hover:text-blue-600 transition-colors"
+                    className="flex-1 text-sm font-semibold text-slate-600 border border-slate-200 px-3 py-2.5 rounded-xl hover:border-[#3eb5bd] hover:text-[#3eb5bd] transition-all duration-200"
                   >
-                    Show more
+                    Show Details
                   </button>
-                  <button 
+                  <button
                     onClick={() => handleBookNow(service)}
-                    className="bg-slate-900 hover:bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors"
+                    className="flex-1 bg-[#3eb5bd] hover:bg-[#35a0a8] text-white px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-1 shadow-sm shadow-[#3eb5bd]/20"
                   >
-                    Book Now
+                    Book Now <ArrowRight size={14} />
                   </button>
                 </div>
               </div>
@@ -240,7 +236,7 @@ export function Services() {
         <div className="mt-16">
           <Dialog.Root open={isCatalogueOpen} onOpenChange={setIsCatalogueOpen}>
             <Dialog.Trigger asChild>
-              <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full text-base font-semibold transition-all shadow-lg shadow-blue-600/20 hover:-translate-y-1 inline-flex items-center gap-2">
+              <button className="bg-[#3eb5bd] hover:bg-[#35a0a8] text-white px-8 py-4 rounded-full text-base font-semibold transition-all shadow-lg shadow-[#3eb5bd]/20 hover:-translate-y-1 inline-flex items-center gap-2">
                 See All Services
                 <ArrowRight size={18} />
               </button>
@@ -253,7 +249,7 @@ export function Services() {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50"
+                      className="fixed inset-0 bg-[#080708]/40 backdrop-blur-sm z-50"
                     />
                   </Dialog.Overlay>
                   <Dialog.Content asChild>
@@ -267,7 +263,7 @@ export function Services() {
                       {/* Sticky Header */}
                       <div className="bg-white border-b border-slate-200 px-4 py-4 md:px-8 md:py-6 sticky top-0 z-10">
                         <div className="max-w-7xl mx-auto flex items-center justify-between mb-6">
-                          <Dialog.Title className="text-2xl md:text-3xl font-heading font-bold text-slate-900">Service Catalogue</Dialog.Title>
+                          <Dialog.Title className="text-2xl md:text-3xl font-heading font-bold text-[#080708]">Service Catalogue</Dialog.Title>
                           <Dialog.Close asChild>
                             <button className="w-10 h-10 bg-slate-100 hover:bg-slate-200 rounded-full flex items-center justify-center text-slate-600 transition-colors">
                               <X size={20} />
@@ -283,7 +279,7 @@ export function Services() {
                               placeholder="Search services, symptoms, or treatments..." 
                               value={searchQuery}
                               onChange={(e) => setSearchQuery(e.target.value)}
-                              className="w-full pl-12 pr-4 py-3 bg-slate-100 border-transparent focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 rounded-xl transition-all outline-none"
+                              className="w-full pl-12 pr-4 py-3 bg-slate-100 border-transparent focus:bg-white focus:border-[#3eb5bd] focus:ring-2 focus:ring-[#c9eff2] rounded-xl transition-all outline-none"
                             />
                           </div>
                           <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 hide-scrollbar">
@@ -293,7 +289,7 @@ export function Services() {
                                 onClick={() => setActiveCategory(cat)}
                                 className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors ${
                                   activeCategory === cat 
-                                    ? "bg-slate-900 text-white" 
+                                    ? "bg-[#080708] text-white" 
                                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                                 }`}
                               >
@@ -312,23 +308,23 @@ export function Services() {
                               {filteredServices.map((service) => (
                                 <div key={service.id} className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-shadow flex flex-col h-full">
                                   <div className="flex justify-between items-start mb-4">
-                                    <div className="bg-blue-50 p-2.5 rounded-xl text-blue-600">
+                                    <div className="bg-[#edf9fa] p-2.5 rounded-xl text-[#3eb5bd]">
                                       {service.icon}
                                     </div>
                                     <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
                                       {service.category}
                                     </span>
                                   </div>
-                                  <h3 className="font-bold text-slate-900 text-lg mb-2">{service.title}</h3>
+                                  <h3 className="font-bold text-[#080708] text-lg mb-2">{service.title}</h3>
                                   <p className="text-sm text-slate-600 mb-6 flex-grow">{service.desc}</p>
                                   <div className="flex items-center justify-between pt-4 border-t border-slate-100">
                                     <div className="flex flex-col">
                                       <span className="text-xs text-slate-500 font-medium">{service.duration}</span>
-                                      <span className="text-sm font-bold text-blue-600">{service.price}</span>
+                                      <span className="text-sm font-bold text-[#3eb5bd]">{service.price}</span>
                                     </div>
                                     <button 
                                       onClick={() => handleBookNow(service)}
-                                      className="bg-slate-900 hover:bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors"
+                                      className="bg-[#080708] hover:bg-[#3eb5bd] text-white px-4 py-2 rounded-full text-sm font-semibold transition-colors"
                                     >
                                       Book Now
                                     </button>
@@ -341,7 +337,7 @@ export function Services() {
                               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 mb-4">
                                 <Search className="text-slate-400" size={24} />
                               </div>
-                              <h3 className="text-xl font-bold text-slate-900 mb-2">No services found</h3>
+                              <h3 className="text-xl font-bold text-[#080708] mb-2">No services found</h3>
                               <p className="text-slate-500">Try adjusting your search or category filters.</p>
                             </div>
                           )}
@@ -366,7 +362,7 @@ export function Services() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[60]"
+                  className="fixed inset-0 bg-[#080708]/40 backdrop-blur-sm z-[60]"
                 />
               </Dialog.Overlay>
               <Dialog.Content asChild>
@@ -378,7 +374,7 @@ export function Services() {
                 >
                   <div className="relative h-48 md:h-64 w-full shrink-0">
                     <Image src={selectedServiceDetail.img} alt={selectedServiceDetail.title} fill className="object-cover" referrerPolicy="no-referrer" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#080708]/80 to-transparent"></div>
                     <Dialog.Close asChild>
                       <button className="absolute top-4 right-4 w-10 h-10 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-colors">
                         <X size={20} />
@@ -386,7 +382,7 @@ export function Services() {
                     </Dialog.Close>
                     <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between">
                       <div>
-                        <span className="inline-block px-3 py-1 bg-blue-600 text-white text-xs font-bold rounded-full mb-3">
+                        <span className="inline-block px-3 py-1 bg-[#3eb5bd] text-white text-xs font-bold rounded-full mb-3">
                           {selectedServiceDetail.category}
                         </span>
                         <Dialog.Title className="text-2xl md:text-3xl font-heading font-bold text-white leading-tight">
@@ -403,21 +399,21 @@ export function Services() {
                   <div className="p-6 md:p-8 overflow-y-auto flex-grow">
                     <div className="flex items-center gap-6 mb-8 pb-6 border-b border-slate-100">
                       <div className="flex items-center gap-2 text-slate-600">
-                        <Clock size={18} className="text-blue-600" />
+                        <Clock size={18} className="text-[#3eb5bd]" />
                         <span className="font-medium">{selectedServiceDetail.duration}</span>
                       </div>
                       <div className="flex items-center gap-2 text-slate-600">
-                        <ShieldPlus size={18} className="text-blue-600" />
+                        <ShieldPlus size={18} className="text-[#3eb5bd]" />
                         <span className="font-medium">Certified Specialists</span>
                       </div>
                     </div>
 
-                    <h3 className="text-lg font-bold text-slate-900 mb-4">Overview</h3>
+                    <h3 className="text-lg font-bold text-[#080708] mb-4">Overview</h3>
                     <p className="text-slate-600 leading-relaxed mb-8">
                       {selectedServiceDetail.longDesc}
                     </p>
 
-                    <h3 className="text-lg font-bold text-slate-900 mb-4">Key Benefits</h3>
+                    <h3 className="text-lg font-bold text-[#080708] mb-4">Key Benefits</h3>
                     <div className="grid sm:grid-cols-2 gap-4 mb-8">
                       {selectedServiceDetail.benefits.map((benefit, idx) => (
                         <div key={idx} className="flex items-start gap-3">
@@ -431,7 +427,7 @@ export function Services() {
                   <div className="p-6 border-t border-slate-100 bg-slate-50 shrink-0">
                     <button 
                       onClick={() => handleBookNow(selectedServiceDetail)}
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-bold text-lg transition-colors flex items-center justify-center gap-2 shadow-lg shadow-blue-600/20"
+                      className="w-full bg-[#3eb5bd] hover:bg-[#35a0a8] text-white py-4 rounded-xl font-bold text-lg transition-colors flex items-center justify-center gap-2 shadow-lg shadow-[#3eb5bd]/20"
                     >
                       Book Now
                       <ArrowRight size={20} />
@@ -454,7 +450,7 @@ export function Services() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[70]"
+                  className="fixed inset-0 bg-[#080708]/40 backdrop-blur-sm z-[70]"
                 />
               </Dialog.Overlay>
               <Dialog.Content asChild>
@@ -462,7 +458,7 @@ export function Services() {
                   initial={{ opacity: 0, scale: 0.95, y: 20 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                  className="fixed left-[50%] top-[50%] z-[70] w-full max-w-2xl -translate-x-[50%] -translate-y-[50%] bg-slate-900 rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+                  className="fixed left-[50%] top-[50%] z-[70] w-full max-w-2xl -translate-x-[50%] -translate-y-[50%] bg-[#080708] rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
                 >
                   <div className="flex items-center justify-between p-6 border-b border-white/10">
                     <Dialog.Title className="text-2xl font-bold text-white">Fast Booking</Dialog.Title>
@@ -486,63 +482,51 @@ export function Services() {
 }
 
 export function Team() {
-  const doctors = [
-    {
-      name: "Dr. Sarah Jenkins",
-      spec: "General Practitioner",
-      img: "https://picsum.photos/seed/doc1/400/400",
-      expertise: "Family Medicine",
-      experience: "15+ Years",
-    },
-    {
-      name: "Dr. Michael Chen",
-      spec: "Pediatrician",
-      img: "https://picsum.photos/seed/doc2/400/400",
-      expertise: "Child Development",
-      experience: "12+ Years",
-    },
-    {
-      name: "Dr. Emily Rodriguez",
-      spec: "Dermatologist",
-      img: "https://picsum.photos/seed/doc3/400/400",
-      expertise: "Clinical Dermatology",
-      experience: "10+ Years",
-    },
-    {
-      name: "Dr. James Wilson",
-      spec: "Cardiologist",
-      img: "https://picsum.photos/seed/doc4/400/400",
-      expertise: "Preventive Cardiology",
-      experience: "20+ Years",
-    },
+  const [isTeamCatalogueOpen, setIsTeamCatalogueOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState("All");
+
+  const allTeamMembers = [
+    { name: "Dr. Sarah Jenkins", spec: "General Practitioner", img: "https://picsum.photos/seed/doc1/400/400", experience: "15+ Years", role: "Doctor" },
+    { name: "Dr. Michael Chen", spec: "Pediatrician", img: "https://picsum.photos/seed/doc2/400/400", experience: "12+ Years", role: "Doctor" },
+    { name: "Dr. Emily Rodriguez", spec: "Dermatologist", img: "https://picsum.photos/seed/doc3/400/400", experience: "10+ Years", role: "Doctor" },
+    { name: "Dr. James Wilson", spec: "Cardiologist", img: "https://picsum.photos/seed/doc4/400/400", experience: "20+ Years", role: "Doctor" },
+    { name: "Alex Thompson", spec: "Clinical Pharmacist", img: "https://picsum.photos/seed/pharm1/400/400", experience: "8+ Years", role: "Pharmacist" },
+    { name: "Linda Park", spec: "Senior Pharmacist", img: "https://picsum.photos/seed/pharm2/400/400", experience: "14+ Years", role: "Pharmacist" },
+    { name: "Maria Santos", spec: "Registered Nurse", img: "https://picsum.photos/seed/nurse1/400/400", experience: "7+ Years", role: "Nurse" },
+    { name: "Tom Nakamura", spec: "Senior Nurse", img: "https://picsum.photos/seed/nurse2/400/400", experience: "11+ Years", role: "Nurse" },
   ];
 
+  const featuredDoctors = allTeamMembers.filter(m => m.role === "Doctor");
+
+  const filteredMembers = allTeamMembers.filter(member => {
+    const matchesSearch = member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          member.spec.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesRole = roleFilter === "All" || member.role === roleFilter;
+    return matchesSearch && matchesRole;
+  });
+
   return (
-    <section className="py-20 bg-[#fbfbfb]" id="doctors">
+    <section className="py-20 bg-[#fbfbfb] scroll-mt-20" id="doctors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6">
-          <div>
-            <div className="inline-block px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-bold uppercase tracking-wider mb-6">
-              Our Team
-            </div>
-            <h2 className="text-3xl md:text-5xl font-heading font-bold text-slate-900">
-              Meet Our Specialists
-            </h2>
+        <div className="text-center mb-16">
+          <div className="inline-block px-3 py-1 rounded-full bg-[#edf9fa] border border-[#c9eff2] text-[#2d9aa2] text-xs font-bold uppercase tracking-wider mb-6">
+            Our Team
           </div>
-          <button className="text-blue-600 font-semibold flex items-center gap-2 hover:text-blue-700 transition-colors">
-            View All Doctors <ArrowRight size={18} />
-          </button>
+          <h2 className="text-3xl md:text-5xl font-heading font-bold text-[#080708]">
+            Meet Our Specialists
+          </h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {doctors.map((doc, i) => (
+        <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 -mx-4 px-4 no-scrollbar sm:grid sm:grid-cols-2 sm:overflow-visible sm:pb-0 sm:mx-0 sm:px-0 lg:grid-cols-4 sm:gap-6">
+          {featuredDoctors.map((doc, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 group hover:shadow-md transition-shadow relative"
+              className="w-[65vw] min-w-[65vw] shrink-0 snap-start sm:w-auto sm:min-w-0 bg-white rounded-3xl p-4 shadow-sm border border-slate-100 group hover:shadow-md transition-shadow relative cursor-default"
             >
               <div className="relative w-full aspect-square rounded-2xl overflow-hidden mb-4 bg-slate-100">
                 <Image
@@ -553,17 +537,136 @@ export function Team() {
                   referrerPolicy="no-referrer"
                 />
                 <div className="absolute top-2 left-2 flex gap-2">
-                  <span className="bg-blue-600/90 backdrop-blur-sm px-2 py-1 rounded-lg text-[10px] font-bold text-white shadow-sm">
-                    {doc.expertise} • {doc.experience}
+                  <span className="bg-[#3eb5bd] px-2 py-1 rounded-lg text-[10px] font-bold text-white shadow-sm">
+                    {doc.experience}
                   </span>
                 </div>
               </div>
-              <h3 className="text-lg font-bold text-slate-900">{doc.name}</h3>
-              <p className="text-sm text-blue-600 font-medium">{doc.spec}</p>
+              <h3 className="text-lg font-bold text-[#080708]">{doc.name}</h3>
+              <p className="text-sm text-[#3eb5bd] font-medium">{doc.spec}</p>
             </motion.div>
           ))}
         </div>
+
+        <div className="text-center mt-12">
+          <button
+            onClick={() => setIsTeamCatalogueOpen(true)}
+            className="text-[#3eb5bd] font-semibold inline-flex items-center gap-2 hover:text-[#2d9aa2] transition-colors"
+          >
+            View All Doctors <ArrowRight size={18} />
+          </button>
+        </div>
       </div>
+
+      {/* Team Catalogue Modal */}
+      <Dialog.Root open={isTeamCatalogueOpen} onOpenChange={setIsTeamCatalogueOpen}>
+        <AnimatePresence>
+          {isTeamCatalogueOpen && (
+            <Dialog.Portal forceMount>
+              <Dialog.Overlay asChild>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-50 bg-[#080708]/40 backdrop-blur-sm"
+                />
+              </Dialog.Overlay>
+              <Dialog.Content asChild>
+                <motion.div
+                  initial={{ opacity: 0, y: "100%" }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: "100%" }}
+                  transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                  className="fixed inset-x-0 bottom-0 z-50 h-[90vh] bg-white rounded-t-[2rem] shadow-2xl flex flex-col overflow-hidden"
+                >
+                  {/* Header & Search */}
+                  <div className="sticky top-0 z-10 bg-white/80 backdrop-blur-xl border-b border-slate-100 px-6 py-6 md:px-10">
+                    <div className="flex items-center justify-between mb-6">
+                      <Dialog.Title className="text-2xl md:text-3xl font-heading font-bold text-[#080708]">
+                        Our Team
+                      </Dialog.Title>
+                      <Dialog.Close className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 hover:text-[#080708] transition-colors">
+                        <X size={20} />
+                      </Dialog.Close>
+                    </div>
+
+                    <div className="flex flex-col md:flex-row gap-4">
+                      <div className="relative flex-grow">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                        <input
+                          type="text"
+                          placeholder="Search by name or specialisation..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 focus:border-[#3eb5bd] focus:ring-2 focus:ring-[#c9eff2] outline-none transition-all"
+                        />
+                      </div>
+                      <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 hide-scrollbar shrink-0">
+                        {["All", "Doctor", "Pharmacist", "Nurse"].map(role => (
+                          <button
+                            key={role}
+                            onClick={() => setRoleFilter(role)}
+                            className={`px-4 py-3 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors ${
+                              roleFilter === role
+                                ? "bg-[#080708] text-white"
+                                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                            }`}
+                          >
+                            {role === "All" ? "All" : `${role}s`}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Team Grid */}
+                  <div className="flex-grow overflow-y-auto p-6 md:p-10 bg-slate-50">
+                    {filteredMembers.length > 0 ? (
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+                        {filteredMembers.map((member, i) => (
+                          <div
+                            key={i}
+                            className="bg-white rounded-2xl p-4 border border-slate-100 hover:shadow-md transition-shadow"
+                          >
+                            <div className="relative w-full aspect-square rounded-xl overflow-hidden mb-3 bg-slate-100">
+                              <Image
+                                src={member.img}
+                                alt={member.name}
+                                fill
+                                className="object-cover grayscale hover:grayscale-0 transition-all duration-500"
+                                referrerPolicy="no-referrer"
+                              />
+                              <div className="absolute top-2 left-2">
+                                <span className="bg-[#3eb5bd] px-2 py-1 rounded-lg text-[10px] font-bold text-white shadow-sm">
+                                  {member.experience}
+                                </span>
+                              </div>
+                            </div>
+                            <p className="text-xs font-bold text-[#1D84D7] uppercase tracking-wider mb-1">{member.role}</p>
+                            <h3 className="text-sm font-bold text-[#080708] leading-tight">{member.name}</h3>
+                            <p className="text-xs text-[#3eb5bd] font-medium mt-0.5">{member.spec}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="h-full flex flex-col items-center justify-center text-slate-500">
+                        <Search size={48} className="mb-4 text-slate-300" />
+                        <p className="text-lg font-medium">No team members found.</p>
+                        <button
+                          onClick={() => { setSearchQuery(""); setRoleFilter("All"); }}
+                          className="mt-4 text-[#3eb5bd] font-semibold hover:underline"
+                        >
+                          Clear filters
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              </Dialog.Content>
+            </Dialog.Portal>
+          )}
+        </AnimatePresence>
+      </Dialog.Root>
     </section>
   );
 }

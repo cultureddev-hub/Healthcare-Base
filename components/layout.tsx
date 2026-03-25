@@ -2,7 +2,7 @@
 
 import React from "react";
 import { motion } from "motion/react";
-import { Menu, X, PhoneCall, Globe, HeartPulse } from "lucide-react";
+import { Menu, X, PhoneCall, Globe } from "lucide-react";
 import Image from "next/image";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 
@@ -15,14 +15,17 @@ export function Navbar() {
   return (
     <nav className="sticky top-0 z-50 w-full bg-[#fbfbfb]/80 backdrop-blur-md border-b border-slate-200/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
+        <div className="flex justify-between items-center h-20 relative">
           {/* Logo */}
-          <div className="flex-shrink-0 flex items-center gap-2 cursor-pointer">
-            <div className="flex items-center gap-2 text-blue-600">
-              <HeartPulse size={32} strokeWidth={2.5} />
-              <span className="font-heading font-bold text-xl tracking-tight text-slate-900">
-                Samui Home Clinic
-              </span>
+          <div className="absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0 flex-shrink-0 cursor-pointer">
+            <div className="relative w-[185px] h-[60px]">
+              <Image
+                src="/Assets/SHC_Logo.png"
+                alt="Samui Home Clinic"
+                fill
+                className="object-contain"
+                priority
+              />
             </div>
           </div>
 
@@ -30,25 +33,25 @@ export function Navbar() {
           <div className="hidden md:flex items-center space-x-8">
             <button
               onClick={() => setIsCatalogueOpen(true)}
-              className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors"
+              className="text-sm font-medium text-slate-600 hover:text-[#3eb5bd] transition-colors"
             >
               Services
             </button>
             <a
               href="#how-it-works"
-              className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors"
+              className="text-sm font-medium text-slate-600 hover:text-[#3eb5bd] transition-colors"
             >
               How it Works
             </a>
             <a
               href="#doctors"
-              className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors"
+              className="text-sm font-medium text-slate-600 hover:text-[#3eb5bd] transition-colors"
             >
               Our Doctors
             </a>
             <a
               href="#about"
-              className="text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors"
+              className="text-sm font-medium text-slate-600 hover:text-[#3eb5bd] transition-colors"
             >
               About Us
             </a>
@@ -58,7 +61,7 @@ export function Navbar() {
           <div className="hidden md:flex items-center space-x-4">
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
-                <button className="flex items-center gap-1 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors focus:outline-none">
+                <button className="flex items-center gap-1 text-sm font-medium text-slate-600 hover:text-[#080708] transition-colors focus:outline-none focus:ring-2 focus:ring-[#3eb5bd] focus:ring-offset-1 rounded-md px-1">
                   <Globe size={16} />
                   EN
                 </button>
@@ -66,7 +69,7 @@ export function Navbar() {
               <DropdownMenu.Portal>
                 <DropdownMenu.Content className="min-w-[120px] bg-white rounded-xl shadow-xl border border-slate-100 p-2 z-50 animate-in fade-in zoom-in-95" sideOffset={8}>
                   {['EN', 'TH', 'FR', 'IT', 'RU'].map((lang) => (
-                    <DropdownMenu.Item key={lang} className="text-sm font-medium text-slate-700 px-3 py-2 rounded-lg cursor-pointer hover:bg-slate-50 hover:text-blue-600 outline-none transition-colors">
+                    <DropdownMenu.Item key={lang} className="text-sm font-medium text-slate-700 px-3 py-2 rounded-lg cursor-pointer hover:bg-slate-50 hover:text-[#3eb5bd] outline-none transition-colors">
                       {lang}
                     </DropdownMenu.Item>
                   ))}
@@ -74,20 +77,22 @@ export function Navbar() {
               </DropdownMenu.Portal>
             </DropdownMenu.Root>
 
-            <a href="tel:+660806696915" className="bg-slate-100 hover:bg-slate-200 text-slate-900 px-6 py-2.5 rounded-full text-sm font-medium transition-all hover:shadow-md hover:-translate-y-0.5 flex items-center gap-2">
+            <a href="tel:+660806696915" className="bg-slate-100 hover:bg-slate-200 text-[#080708] px-6 py-2.5 rounded-full text-sm font-medium transition-all hover:shadow-md hover:-translate-y-0.5 flex items-center gap-2">
               <PhoneCall size={16} />
               +66 080-669-6915
             </a>
-            <button onClick={scrollToBooking} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-full text-sm font-medium transition-all hover:shadow-lg hover:-translate-y-0.5">
+            <button onClick={scrollToBooking} className="bg-[#3eb5bd] hover:bg-[#35a0a8] text-white px-6 py-2.5 rounded-full text-sm font-medium transition-all hover:shadow-lg hover:-translate-y-0.5">
               Book Now
             </button>
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
+          <div className="md:hidden flex items-center ml-auto">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="text-slate-600 hover:text-slate-900 focus:outline-none p-2"
+              aria-label={isOpen ? "Close menu" : "Open menu"}
+              aria-expanded={isOpen}
+              className="text-slate-600 hover:text-[#080708] focus:outline-none focus:ring-2 focus:ring-[#3eb5bd] focus:ring-offset-1 rounded-md p-2 cursor-pointer"
             >
               {isOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -107,34 +112,37 @@ export function Navbar() {
               setIsOpen(false);
               setIsCatalogueOpen(true);
             }}
-            className="block w-full text-left px-3 py-3 rounded-md text-base font-medium text-slate-700 hover:text-blue-600 hover:bg-slate-50"
+            className="block w-full text-left px-3 py-3 rounded-md text-base font-medium text-slate-700 hover:text-[#3eb5bd] hover:bg-slate-50"
           >
             Services
           </button>
           <a
             href="#how-it-works"
-            className="block px-3 py-3 rounded-md text-base font-medium text-slate-700 hover:text-blue-600 hover:bg-slate-50"
+            onClick={() => setIsOpen(false)}
+            className="block px-3 py-3 rounded-md text-base font-medium text-slate-700 hover:text-[#3eb5bd] hover:bg-slate-50"
           >
             How it Works
           </a>
           <a
             href="#doctors"
-            className="block px-3 py-3 rounded-md text-base font-medium text-slate-700 hover:text-blue-600 hover:bg-slate-50"
+            onClick={() => setIsOpen(false)}
+            className="block px-3 py-3 rounded-md text-base font-medium text-slate-700 hover:text-[#3eb5bd] hover:bg-slate-50"
           >
             Our Doctors
           </a>
           <a
             href="#about"
-            className="block px-3 py-3 rounded-md text-base font-medium text-slate-700 hover:text-blue-600 hover:bg-slate-50"
+            onClick={() => setIsOpen(false)}
+            className="block px-3 py-3 rounded-md text-base font-medium text-slate-700 hover:text-[#3eb5bd] hover:bg-slate-50"
           >
             About Us
           </a>
           <div className="pt-4 flex flex-col gap-3">
-            <a href="tel:+660806696915" className="w-full bg-slate-100 text-slate-900 px-6 py-3 rounded-xl text-base font-medium flex items-center justify-center gap-2">
+            <a href="tel:+660806696915" className="w-full bg-slate-100 text-[#080708] px-6 py-3 rounded-xl text-base font-medium flex items-center justify-center gap-2">
               <PhoneCall size={18} />
               +66 080-669-6915
             </a>
-            <button onClick={scrollToBooking} className="w-full bg-blue-600 text-white px-6 py-3 rounded-xl text-base font-medium flex items-center justify-center gap-2">
+            <button onClick={scrollToBooking} className="w-full bg-[#3eb5bd] text-white px-6 py-3 rounded-xl text-base font-medium flex items-center justify-center gap-2">
               Book Now
             </button>
           </div>
@@ -146,20 +154,52 @@ export function Navbar() {
 
 export function Footer() {
   return (
-    <footer className="bg-slate-900 text-slate-300 py-16 border-t border-slate-800">
+    <footer className="bg-[#080708] text-slate-300 py-16 border-t border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="col-span-1 md:col-span-1">
-            <div className="flex items-center gap-2 mb-6 text-white">
-              <HeartPulse size={32} strokeWidth={2.5} className="text-blue-400" />
-              <span className="font-heading font-bold text-xl tracking-tight">
-                Samui Home Clinic
-              </span>
+            <div className="relative w-full max-w-[280px] h-[92px] mb-6">
+              <Image
+                src="/Assets/SHC_Logo.png"
+                alt="Samui Home Clinic"
+                fill
+                className="object-contain object-left"
+              />
             </div>
             <p className="text-sm text-slate-400 mb-6 max-w-xs">
               Providing expert medical care for your family, anytime and
               anywhere. Your health is our priority.
             </p>
+            {/* Branch Links */}
+            <div className="flex flex-col gap-2 mb-5">
+              <a href="https://maps.app.goo.gl/hfATkg4Hj7XUEybQ7" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors">
+                <svg className="w-4 h-4 text-[#3eb5bd] shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                Chaweng Clinic
+              </a>
+              <a href="https://maps.app.goo.gl/X4cxxB1y7bCsVPGe7" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors">
+                <svg className="w-4 h-4 text-[#3eb5bd] shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                Bangrak Clinic
+              </a>
+              <a href="https://maps.app.goo.gl/2PzKU2FYWFWSp1D2A" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors">
+                <svg className="w-4 h-4 text-[#3eb5bd] shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                Rajabhat University
+              </a>
+            </div>
+            {/* Opening Hours */}
+            <div className="flex flex-col gap-1.5 text-xs">
+              <div className="flex items-center gap-1.5 text-[#7fd3d7]">
+                <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Mon–Fri: 9:00 AM – 7:00 PM
+              </div>
+              <div className="flex items-center gap-1.5 text-[#7fd3d7]">
+                <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Sat–Sun: 9:00 AM – 5:00 PM
+              </div>
+              <div className="flex items-center gap-1.5 text-amber-400">
+                <svg className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Lunch Break: 12:00 PM – 1:30 PM
+              </div>
+            </div>
           </div>
 
           <div>
@@ -203,7 +243,7 @@ export function Footer() {
               </li>
               <li>
                 <a href="#" className="hover:text-white transition-colors">
-                  Careers
+                  Latest Articles
                 </a>
               </li>
               <li>
