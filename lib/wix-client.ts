@@ -6,12 +6,12 @@
  *
  *   wixClient      — OAuthStrategy (visitor/anonymous)
  *                    Use for: public CMS reads (Services, Team, Blog, Testimonials),
- *                    Bookings service queries, eCommerce product queries, CRM contact creation.
+ *                    Bookings service queries, eCommerce product queries.
  *
  *   adminWixClient — ApiKeyStrategy (server-side admin)
- *                    Use for: writes to admin-only collections (Bookings, MedicalInquiries).
- *                    Secret key never leaves the server — NEXT_PUBLIC prefix intentionally
- *                    NOT used for WIX_API_KEY or WIX_SITE_ID.
+ *                    Use for: writes to admin-only collections (Bookings, MedicalInquiries),
+ *                    CRM contact creation. Secret key never leaves the server —
+ *                    NEXT_PUBLIC prefix intentionally NOT used for WIX_API_KEY or WIX_SITE_ID.
  *
  * Both clients are restricted to server-side execution only via the `server-only`
  * package. Importing either in a Client Component throws a build-time error.
@@ -31,19 +31,18 @@ import { services } from '@wix/bookings';
 import { products } from '@wix/stores';
 import { contacts } from '@wix/crm';
 
-type WixClient = ReturnType<typeof createClient<{ items: typeof items; services: typeof services; products: typeof products; contacts: typeof contacts }>>;
-type AdminWixClient = ReturnType<typeof createClient<{ items: typeof items; contacts: typeof contacts }>>;
-
-let _wixClient: WixClient | null = null;
-let _adminWixClient: AdminWixClient | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _wixClient: any = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _adminWixClient: any = null;
 
 /**
- * wixClient — anonymous/visitor OAuth client
+ * getWixClient — anonymous/visitor OAuth client
  *
  * Modules: items, services, products, contacts
  * Auth: OAuthStrategy (public Client ID)
  */
-export function getWixClient(): WixClient {
+function getWixClient() {
   if (_wixClient) return _wixClient;
 
   const clientId = process.env.NEXT_PUBLIC_WIX_CLIENT_ID;
@@ -62,7 +61,7 @@ export function getWixClient(): WixClient {
 }
 
 /**
- * adminWixClient — server-side API key client
+ * getAdminWixClient — server-side API key client
  *
  * Use exclusively in Server Actions that write to admin-only collections or CRM:
  *   - Bookings (insert)          — non-PHI appointment metadata
@@ -76,7 +75,7 @@ export function getWixClient(): WixClient {
  * Modules: items, contacts
  * Auth: ApiKeyStrategy (secret key + site ID — never exposed to browser)
  */
-export function getAdminWixClient(): AdminWixClient {
+function getAdminWixClient() {
   if (_adminWixClient) return _adminWixClient;
 
   const siteId = process.env.WIX_SITE_ID;
@@ -101,16 +100,16 @@ export function getAdminWixClient(): AdminWixClient {
   return _adminWixClient;
 }
 
-// Convenience re-exports as computed properties for backwards compatibility
-// with any direct `wixClient.x` / `adminWixClient.x` usage in the codebase.
-export const wixClient = new Proxy({} as WixClient, {
+// Proxy re-exports — preserve the existing `wixClient.x` / `adminWixClient.x`
+// call-site API so no other files need to change.
+export const wixClient = new Proxy({} as ReturnType<typeof getWixClient>, {
   get(_, prop) {
-    return (getWixClient() as Record<string | symbol, unknown>)[prop];
+    return getWixClient()[prop];
   },
 });
 
-export const adminWixClient = new Proxy({} as AdminWixClient, {
+export const adminWixClient = new Proxy({} as ReturnType<typeof getAdminWixClient>, {
   get(_, prop) {
-    return (getAdminWixClient() as Record<string | symbol, unknown>)[prop];
+    return getAdminWixClient()[prop];
   },
 });
