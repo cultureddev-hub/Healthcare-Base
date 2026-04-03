@@ -25,7 +25,7 @@ export function About() {
               className="relative rounded-[2rem] overflow-hidden aspect-[4/3] shadow-2xl"
             >
               <video
-                src="/assets/Samui_home_clinic_hero_video.mp4"
+                src="/Assets/Samui_home_clinic_hero_video.mp4"
                 autoPlay
                 muted
                 loop
