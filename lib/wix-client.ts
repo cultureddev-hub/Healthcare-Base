@@ -16,6 +16,10 @@
  * Both clients are restricted to server-side execution only via the `server-only`
  * package. Importing either in a Client Component throws a build-time error.
  *
+ * Lazy initialization: clients are created on first call, not at module load time.
+ * This prevents Next.js static generation ("Collecting page data") from throwing
+ * on missing env vars — validation only runs at request time.
+ *
  * Architecture: Wix Headless (Vercel/Next.js) — see BUILD_LOG_2.1.md
  */
 
@@ -27,21 +31,11 @@ import { services } from '@wix/bookings';
 import { products } from '@wix/stores';
 import { contacts } from '@wix/crm';
 
-if (!process.env.NEXT_PUBLIC_WIX_CLIENT_ID) {
-  throw new Error(
-    'Missing environment variable: NEXT_PUBLIC_WIX_CLIENT_ID — add to .env.local'
-  );
-}
-if (!process.env.WIX_API_KEY) {
-  throw new Error(
-    'Missing environment variable: WIX_API_KEY — add to .env.local'
-  );
-}
-if (!process.env.WIX_SITE_ID) {
-  throw new Error(
-    'Missing environment variable: WIX_SITE_ID — add to .env.local'
-  );
-}
+type WixClient = ReturnType<typeof createClient<{ items: typeof items; services: typeof services; products: typeof products; contacts: typeof contacts }>>;
+type AdminWixClient = ReturnType<typeof createClient<{ items: typeof items; contacts: typeof contacts }>>;
+
+let _wixClient: WixClient | null = null;
+let _adminWixClient: AdminWixClient | null = null;
 
 /**
  * wixClient — anonymous/visitor OAuth client
@@ -49,10 +43,23 @@ if (!process.env.WIX_SITE_ID) {
  * Modules: items, services, products, contacts
  * Auth: OAuthStrategy (public Client ID)
  */
-export const wixClient = createClient({
-  modules: { items, services, products, contacts },
-  auth: OAuthStrategy({ clientId: process.env.NEXT_PUBLIC_WIX_CLIENT_ID }),
-});
+export function getWixClient(): WixClient {
+  if (_wixClient) return _wixClient;
+
+  const clientId = process.env.NEXT_PUBLIC_WIX_CLIENT_ID;
+  if (!clientId) {
+    throw new Error(
+      'Missing environment variable: NEXT_PUBLIC_WIX_CLIENT_ID — add to Vercel Environment Variables'
+    );
+  }
+
+  _wixClient = createClient({
+    modules: { items, services, products, contacts },
+    auth: OAuthStrategy({ clientId }),
+  });
+
+  return _wixClient;
+}
 
 /**
  * adminWixClient — server-side API key client
@@ -69,10 +76,41 @@ export const wixClient = createClient({
  * Modules: items, contacts
  * Auth: ApiKeyStrategy (secret key + site ID — never exposed to browser)
  */
-export const adminWixClient = createClient({
-  modules: { items, contacts },
-  auth: ApiKeyStrategy({
-    siteId: process.env.WIX_SITE_ID,
-    apiKey: process.env.WIX_API_KEY,
-  }),
+export function getAdminWixClient(): AdminWixClient {
+  if (_adminWixClient) return _adminWixClient;
+
+  const siteId = process.env.WIX_SITE_ID;
+  const apiKey = process.env.WIX_API_KEY;
+
+  if (!apiKey) {
+    throw new Error(
+      'Missing environment variable: WIX_API_KEY — add to Vercel Environment Variables'
+    );
+  }
+  if (!siteId) {
+    throw new Error(
+      'Missing environment variable: WIX_SITE_ID — add to Vercel Environment Variables'
+    );
+  }
+
+  _adminWixClient = createClient({
+    modules: { items, contacts },
+    auth: ApiKeyStrategy({ siteId, apiKey }),
+  });
+
+  return _adminWixClient;
+}
+
+// Convenience re-exports as computed properties for backwards compatibility
+// with any direct `wixClient.x` / `adminWixClient.x` usage in the codebase.
+export const wixClient = new Proxy({} as WixClient, {
+  get(_, prop) {
+    return (getWixClient() as Record<string | symbol, unknown>)[prop];
+  },
+});
+
+export const adminWixClient = new Proxy({} as AdminWixClient, {
+  get(_, prop) {
+    return (getAdminWixClient() as Record<string | symbol, unknown>)[prop];
+  },
 });
