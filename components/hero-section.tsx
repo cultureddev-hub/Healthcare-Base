@@ -70,11 +70,14 @@ export function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
+          aria-label="English-Speaking Doctors For Tourists, Expats & Residents in Koh Samui"
           className="text-[2.5rem] sm:text-[3.3rem] lg:text-[5rem] font-heading font-extrabold text-[#080708] leading-[1.1] tracking-tight mb-4"
         >
           English-Speaking <br />
           Doctors For{" "}
-          <span className="relative flex w-full justify-center overflow-hidden text-center md:pb-4 md:pt-1 mt-2">
+          <span className="relative flex w-full justify-center overflow-hidden text-center pb-4 pt-1 mt-2">
+            {/* Static text for search crawlers — visually hidden, always in DOM */}
+            <span className="sr-only">Tourists, Expats &amp; Residents in Koh Samui</span>
             &nbsp;
             {titles.map((title, index) => (
               <motion.span
@@ -417,6 +420,10 @@ function ModalWrapper({ title, subtitle, onClose, children }: { title: string, s
 
 export function PickUpBookingModal({ onClose }: { onClose: () => void }) {
   const [step, setStep] = useState(1);
+  const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [pdpaConsent, setPdpaConsent] = useState(false);
   const [date, setDate] = useState<Date | null>(null);
   const [time, setTime] = useState("");
   const [formData, setFormData] = useState({ fullName: "", whatsapp: "", address: "" });
@@ -424,14 +431,60 @@ export function PickUpBookingModal({ onClose }: { onClose: () => void }) {
   const isStep1Valid = date && time;
   const isStep2Valid = formData.fullName && formData.whatsapp && formData.address;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert("Pick-Up requested successfully!");
-    onClose();
+    setIsSubmitting(true);
+    setSubmitError("");
+    try {
+      const res = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName: formData.fullName,
+          whatsapp: formData.whatsapp,
+          address: formData.address,
+          date: date ? date.toISOString() : null,
+          time,
+          type: "pickup",
+          pdpaConsent: true,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || "Submission failed. Please try again.");
+      }
+      setSubmitted(true);
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <ModalWrapper title="Order Pick-Up" subtitle="Schedule transport to our clinic." onClose={onClose}>
+    <ModalWrapper title={submitted ? "Request Received" : "Order Pick-Up"} subtitle={submitted ? "" : "Schedule transport to our clinic."} onClose={onClose}>
+      {submitted ? (
+        <div className="flex flex-col items-center text-center gap-6 py-4">
+          <div className="w-16 h-16 rounded-full bg-[#3eb5bd]/20 flex items-center justify-center">
+            <CheckCircle2 size={32} className="text-[#3eb5bd]" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold mb-2">Your request has been received!</h3>
+            <p className="text-white/60 text-sm leading-relaxed">
+              One of our staff members will get in touch via WhatsApp shortly to confirm your booking.
+            </p>
+          </div>
+          <div className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-left">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">You requested</p>
+            <p className="text-white font-semibold flex items-center gap-2">
+              <span className="text-[#3eb5bd]">🚗</span> A Patient Pick-Up
+            </p>
+          </div>
+          <button onClick={onClose} className="w-full bg-white/10 hover:bg-white/15 text-white py-3 rounded-xl font-semibold transition-colors text-sm">
+            Close
+          </button>
+        </div>
+      ) : (
       <div className="space-y-6">
         {step === 1 && (
           <div className="space-y-4">
@@ -467,18 +520,41 @@ export function PickUpBookingModal({ onClose }: { onClose: () => void }) {
               <label htmlFor="pickup-address" className="text-xs font-bold text-slate-400 uppercase tracking-wider">Pick-up Address</label>
               <input id="pickup-address" type="text" placeholder="Hotel / Villa name or address" required value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-base outline-none focus:ring-2 focus:ring-[#3eb5bd]"/>
             </div>
-            <button type="submit" disabled={!isStep2Valid} className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-700 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 mt-4 cursor-pointer">
-              Confirm Pick-Up <CheckCircle2 size={18} />
+            {/* PDPA Consent — COMP-01 */}
+            <label className="flex items-start gap-3 cursor-pointer mt-2">
+              <input
+                type="checkbox"
+                checked={pdpaConsent}
+                onChange={e => setPdpaConsent(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-white/20 bg-white/5 text-[#3eb5bd] focus:ring-[#3eb5bd] shrink-0 cursor-pointer"
+              />
+              <span className="text-xs text-slate-400 leading-relaxed">
+                I consent to Samui Home Clinic collecting my personal data for this transport request, per Thailand&apos;s <span className="text-[#7fd3d7]">PDPA (B.E. 2562)</span>.
+              </span>
+            </label>
+            <button type="submit" disabled={!isStep2Valid || !pdpaConsent || isSubmitting} className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-700 disabled:opacity-50 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 mt-4 cursor-pointer">
+              {isSubmitting ? (
+                <><svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg> Submitting...</>
+              ) : (
+                <>Request Pick Up <CheckCircle2 size={18} /></>
+              )}
             </button>
+            {submitError && <p className="text-sm text-red-400 text-center">{submitError}</p>}
           </form>
         )}
       </div>
+      )}
     </ModalWrapper>
   );
 }
 
 export function HomeVisitBookingModal({ onClose }: { onClose: () => void }) {
   const [step, setStep] = useState(1);
+  const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [pdpaConsent, setPdpaConsent] = useState(false);
+  const [pharmacyRedirect, setPharmacyRedirect] = useState<string | null>(null);
   const [address, setAddress] = useState("");
   const [date, setDate] = useState<Date | null>(null);
   const [time, setTime] = useState("");
@@ -487,14 +563,96 @@ export function HomeVisitBookingModal({ onClose }: { onClose: () => void }) {
   const isStep1Valid = address && date && time;
   const isStep2Valid = formData.fullName && formData.whatsapp;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert("Home visit requested successfully!");
-    onClose();
+    setIsSubmitting(true);
+    setSubmitError("");
+    try {
+      const res = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName: formData.fullName,
+          whatsapp: formData.whatsapp,
+          symptoms: formData.symptoms,
+          address,
+          date: date ? date.toISOString() : null,
+          time,
+          type: "home-visit",
+          pdpaConsent: true,
+        }),
+      });
+      const json = await res.json();
+      // COMP-02: Pharmacy keyword detected — route to confidential channel
+      if (json.redirect === "pharmacy") {
+        setPharmacyRedirect(json.whatsappUrl);
+        return;
+      }
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || "Submission failed. Please try again.");
+      }
+      setSubmitted(true);
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
+  // COMP-02: Pharmacy intercept screen — no booking created, staff handles offline
+  if (pharmacyRedirect) {
+    return (
+      <ModalWrapper title="Confidential Enquiry" subtitle="" onClose={onClose}>
+        <div className="flex flex-col items-center text-center gap-6 py-4">
+          <div className="w-16 h-16 rounded-full bg-amber-500/20 flex items-center justify-center">
+            <ShieldCheck size={32} className="text-amber-400" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold mb-2">Speak with a Pharmacist</h3>
+            <p className="text-white/60 text-sm leading-relaxed">
+              For this type of request, our pharmacist is available for a private, confidential consultation. Please contact us directly.
+            </p>
+          </div>
+          <div className="w-full space-y-3">
+            <a href={pharmacyRedirect} target="_blank" rel="noopener noreferrer"
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-xl font-bold transition-colors flex items-center justify-center gap-2">
+              WhatsApp a Pharmacist
+            </a>
+            <a href="tel:+660806696915"
+              className="w-full bg-white/10 hover:bg-white/15 text-white py-4 rounded-xl font-bold transition-colors flex items-center justify-center gap-2">
+              Call Us Now
+            </a>
+          </div>
+          <button onClick={onClose} className="text-xs text-slate-500 hover:text-slate-300 underline">Close</button>
+        </div>
+      </ModalWrapper>
+    );
+  }
+
   return (
-    <ModalWrapper title="Request a Home Visit" subtitle="Premium call-out to your location." onClose={onClose}>
+    <ModalWrapper title={submitted ? "Request Received" : "Request a Home Visit"} subtitle={submitted ? "" : "Premium call-out to your location."} onClose={onClose}>
+      {submitted ? (
+        <div className="flex flex-col items-center text-center gap-6 py-4">
+          <div className="w-16 h-16 rounded-full bg-[#3eb5bd]/20 flex items-center justify-center">
+            <CheckCircle2 size={32} className="text-[#3eb5bd]" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold mb-2">Your request has been received!</h3>
+            <p className="text-white/60 text-sm leading-relaxed">
+              One of our staff members will get in touch via WhatsApp shortly to confirm your booking.
+            </p>
+          </div>
+          <div className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-left">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">You requested</p>
+            <p className="text-white font-semibold flex items-center gap-2">
+              <span className="text-[#3eb5bd]">🏠</span> A Home &amp; Hotel Call-Out
+            </p>
+          </div>
+          <button onClick={onClose} className="w-full bg-white/10 hover:bg-white/15 text-white py-3 rounded-xl font-semibold transition-colors text-sm">
+            Close
+          </button>
+        </div>
+      ) : (
       <div className="space-y-6">
         {step === 1 && (
           <div className="space-y-4">
@@ -534,18 +692,40 @@ export function HomeVisitBookingModal({ onClose }: { onClose: () => void }) {
               <label htmlFor="homevisit-symptoms" className="text-xs font-bold text-slate-400 uppercase tracking-wider">Symptoms <span className="normal-case font-normal">(optional)</span></label>
               <textarea id="homevisit-symptoms" placeholder="Briefly describe your symptoms" rows={3} value={formData.symptoms} onChange={e => setFormData({...formData, symptoms: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-base outline-none focus:ring-2 focus:ring-[#3eb5bd] resize-none"/>
             </div>
-            <button type="submit" disabled={!isStep2Valid} className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-700 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 mt-4 cursor-pointer">
-              Confirm Visit <CheckCircle2 size={18} />
+            {/* PDPA Consent — COMP-01 */}
+            <label className="flex items-start gap-3 cursor-pointer mt-2">
+              <input
+                type="checkbox"
+                checked={pdpaConsent}
+                onChange={e => setPdpaConsent(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-white/20 bg-white/5 text-[#3eb5bd] focus:ring-[#3eb5bd] shrink-0 cursor-pointer"
+              />
+              <span className="text-xs text-slate-400 leading-relaxed">
+                I consent to Samui Home Clinic collecting and processing my personal data for this home visit request, per Thailand&apos;s <span className="text-[#7fd3d7]">PDPA (B.E. 2562)</span>.
+              </span>
+            </label>
+            <button type="submit" disabled={!isStep2Valid || !pdpaConsent || isSubmitting} className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-700 disabled:opacity-50 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 mt-4 cursor-pointer">
+              {isSubmitting ? (
+                <><svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg> Submitting...</>
+              ) : (
+                <>Request a Visit <CheckCircle2 size={18} /></>
+              )}
             </button>
+            {submitError && <p className="text-sm text-red-400 text-center">{submitError}</p>}
           </form>
         )}
       </div>
+      )}
     </ModalWrapper>
   );
 }
 
 export function OnlineConsultBookingModal({ onClose }: { onClose: () => void }) {
   const [step, setStep] = useState(1);
+  const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [pdpaConsent, setPdpaConsent] = useState(false);
   const [provider, setProvider] = useState("");
   const [department, setDepartment] = useState("");
   const [date, setDate] = useState<Date | null>(null);
@@ -556,14 +736,63 @@ export function OnlineConsultBookingModal({ onClose }: { onClose: () => void }) 
   const isStep2Valid = date && time;
   const isStep3Valid = formData.fullName && formData.whatsapp && formData.email;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert("Online consultation booked successfully!");
-    onClose();
+    setIsSubmitting(true);
+    setSubmitError("");
+    try {
+      const res = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName: formData.fullName,
+          whatsapp: formData.whatsapp,
+          email: formData.email,
+          provider,
+          department,
+          date: date ? date.toISOString() : null,
+          time,
+          service: `Online Consultation — ${department}`,
+          type: "online-consultation",
+          pdpaConsent: true,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || "Submission failed. Please try again.");
+      }
+      setSubmitted(true);
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <ModalWrapper title="Book Online Consultation" subtitle="Expert medical advice from anywhere." onClose={onClose}>
+    <ModalWrapper title={submitted ? "Request Received" : "Book Online Consultation"} subtitle={submitted ? "" : "Expert medical advice from anywhere."} onClose={onClose}>
+      {submitted ? (
+        <div className="flex flex-col items-center text-center gap-6 py-4">
+          <div className="w-16 h-16 rounded-full bg-[#3eb5bd]/20 flex items-center justify-center">
+            <CheckCircle2 size={32} className="text-[#3eb5bd]" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold mb-2">Your request has been received!</h3>
+            <p className="text-white/60 text-sm leading-relaxed">
+              One of our staff members will get in touch via WhatsApp shortly to confirm your booking.
+            </p>
+          </div>
+          <div className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-left">
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">You requested</p>
+            <p className="text-white font-semibold flex items-center gap-2">
+              <span className="text-[#3eb5bd]">💻</span> An Online Consultation
+            </p>
+          </div>
+          <button onClick={onClose} className="w-full bg-white/10 hover:bg-white/15 text-white py-3 rounded-xl font-semibold transition-colors text-sm">
+            Close
+          </button>
+        </div>
+      ) : (
       <div className="space-y-6">
         {/* Progress Dots */}
         <div className="flex justify-center gap-2 mb-2">
@@ -644,12 +873,30 @@ export function OnlineConsultBookingModal({ onClose }: { onClose: () => void }) 
               <label htmlFor="consult-whatsapp" className="text-xs font-bold text-slate-400 uppercase tracking-wider">WhatsApp Number</label>
               <input id="consult-whatsapp" type="tel" placeholder="+66 000 000 0000" required value={formData.whatsapp} onChange={e => setFormData({...formData, whatsapp: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-base outline-none focus:ring-2 focus:ring-[#3eb5bd]"/>
             </div>
-            <button type="submit" disabled={!isStep3Valid} className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-700 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 mt-4 cursor-pointer">
-              Confirm Booking <CheckCircle2 size={18} />
+            {/* PDPA Consent — COMP-01 */}
+            <label className="flex items-start gap-3 cursor-pointer mt-2">
+              <input
+                type="checkbox"
+                checked={pdpaConsent}
+                onChange={e => setPdpaConsent(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-white/20 bg-white/5 text-[#3eb5bd] focus:ring-[#3eb5bd] shrink-0 cursor-pointer"
+              />
+              <span className="text-xs text-slate-400 leading-relaxed">
+                I consent to Samui Home Clinic collecting my personal data for this consultation request, per Thailand&apos;s <span className="text-[#7fd3d7]">PDPA (B.E. 2562)</span>.
+              </span>
+            </label>
+            <button type="submit" disabled={!isStep3Valid || !pdpaConsent || isSubmitting} className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-700 disabled:opacity-50 text-white py-4 rounded-xl font-bold flex items-center justify-center gap-2 mt-4 cursor-pointer">
+              {isSubmitting ? (
+                <><svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg> Submitting...</>
+              ) : (
+                <>Request a Consultation <CheckCircle2 size={18} /></>
+              )}
             </button>
+            {submitError && <p className="text-sm text-red-400 text-center">{submitError}</p>}
           </form>
         )}
       </div>
+      )}
     </ModalWrapper>
   );
 }

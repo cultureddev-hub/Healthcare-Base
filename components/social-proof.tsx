@@ -1,9 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useReducedMotion } from "motion/react";
 import { motion, AnimatePresence } from "motion/react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   ChevronLeft,
   ChevronRight,
@@ -14,70 +16,93 @@ import {
   ArrowRight,
   Search,
   X,
-  MapPin,
-  ShieldCheck,
   Calendar,
   User,
   Clock
 } from "lucide-react";
 import * as Dialog from "@radix-ui/react-dialog";
+import { BLOG_POSTS } from "@/lib/blog-data";
 
 export function Testimonials() {
   const shouldReduceMotion = useReducedMotion();
   const testimonials = [
     {
-      text: "The convenience of switching between online and in-person care is amazing. The doctors are always attentive and knowledgeable.",
-      author: "John D.",
-      role: "Expat, Koh Samui",
+      text: "Excellent service and care from start to finish. A clean and professional environment with expert doctors who speak excellent English, meaning your case and treatment are explained in detail. Many different cases can be treated, so look no further than Samui Home Clinic for diagnosis or solutions.",
+      author: "Dino Bryant",
+      role: "Tourist, Koh Samui",
       verified: true,
-      img: "https://picsum.photos/seed/user1/100/100",
+      img: "https://picsum.photos/seed/dino/100/100",
       rating: 5,
     },
     {
-      text: "I love how I can consult with my doctor from home when I can't make it to the clinic. The service is excellent and so easy to use.",
-      author: "Sarah M.",
-      role: "Tourist, UK",
+      text: "Very clean and professional. My son was very ill during our time in Thailand, and this clinic was the only one that could solve all his problems. The clinic is kind, sincere, and takes excellent care of children. The doctors and staff speak good English. Highly recommend.",
+      author: "Anne Grozdowski",
+      role: "Tourist, Thailand",
       verified: true,
-      img: "https://picsum.photos/seed/user2/100/100",
+      img: "https://picsum.photos/seed/anne/100/100",
       rating: 5,
     },
     {
-      text: "Finally, a healthcare provider that understands modern families. Booking appointments for my kids has never been easier.",
-      author: "Emily R.",
-      role: "Resident, Thailand",
+      text: "The doctor was excellent. She spoke English very well and was very friendly. I came to see her because of a stomach problem, which she treated the next day. Thank you so much.",
+      author: "James McDonnell",
+      role: "Tourist, Koh Samui",
       verified: true,
-      img: "https://picsum.photos/seed/user3/100/100",
+      img: "https://picsum.photos/seed/james/100/100",
       rating: 5,
     },
     {
-      text: "Getting treatment at my hotel was painless. The doctor arrived within the hour and was incredibly professional.",
-      author: "Marco L.",
-      role: "Tourist, Italy",
+      text: "I was suffering for multiple days from a heat rash that went only worse day by day. As soon as we arrived they helped us immediately. My symptoms were gone very fast. People were very friendly and took time to explain everything very clearly in English. Also the price was very decent. Definitely 5 stars for this place!!!",
+      author: "Nadine Mulder",
+      role: "Tourist, Koh Samui",
       verified: true,
-      img: "https://picsum.photos/seed/user4/100/100",
+      img: "https://picsum.photos/seed/nadine/100/100",
       rating: 5,
     },
     {
-      text: "I needed a prescription fast. The pharmacist online consultation was quick, smooth, and I had my medication within hours.",
-      author: "Priya S.",
-      role: "Expat, India",
+      text: "I had a nasty finger injury following an incident with an electric planer and needed sutures removing. 500 THB seemed very reasonable. A short wait before being seen by a nurse, checked by the doctor, then sutures removed very well — they did a great job. Good infection control measures in place, competent staff. I would recommend this clinic.",
+      author: "Sir Mick of Nottingham",
+      role: "Local Guide, UK",
       verified: true,
-      img: "https://picsum.photos/seed/user5/100/100",
+      img: "https://picsum.photos/seed/mick/100/100",
       rating: 5,
     },
     {
-      text: "After a beach accident I was worried about wound care. The team handled it brilliantly — clean, professional, and caring.",
-      author: "Jake W.",
-      role: "Tourist, Australia",
+      text: "Great place, can't recommend enough if you are a tourist. I had bad diarrhoea and was worried so came here. They took my blood pressure, gave me a blood test and sent a stool sample away — was out within an hour with a bag of different meds. Only 1,800 baht seemed more than fair. The staff were all very friendly, understanding and professional.",
+      author: "Alpha Seal",
+      role: "Tourist, Koh Samui",
       verified: true,
-      img: "https://picsum.photos/seed/user6/100/100",
+      img: "https://picsum.photos/seed/alpha/100/100",
+      rating: 5,
+    },
+    {
+      text: "One of the most professional, clean, and efficient clinics I have been to. Doctors are very accessible, phlebotomists are all super professional, prices are great value. They also offer IV infusions based on different needs depending on goals: age, sports, targeted therapies.",
+      author: "Alfred A",
+      role: "Local Guide, Koh Samui",
+      verified: true,
+      img: "https://picsum.photos/seed/alfred/100/100",
+      rating: 5,
+    },
+    {
+      text: "I got an infection on my foot — it was so painful I finally decided to see a doctor. I went to Samui Home Clinic and they did a great job. I got daily appointments to clean my wounds. All the staff and the doctor made a really super good job. 5 star service, fair price. It would probably cost x10 in a private hospital. Highly recommend.",
+      author: "Balmer Patrick",
+      role: "Local Guide, Koh Samui",
+      verified: true,
+      img: "https://picsum.photos/seed/balmer/100/100",
+      rating: 5,
+    },
+    {
+      text: "Very good clinic. Did 10 blood tests and it was done in less than a minute. In my home country it would take more than 5 minutes. Here they did it all in 1 tube and it was done in under 1 minute. Very helpful staff and doctors.",
+      author: "Dylan Jagersma",
+      role: "Local Guide, Koh Samui",
+      verified: true,
+      img: "https://picsum.photos/seed/dylan/100/100",
       rating: 5,
     },
   ];
 
-  // Duplicate for seamless loop
+  // Duplicate for seamless loop (-50% = exact halfway point of doubled array)
   const row1 = [...testimonials, ...testimonials];
-  const row2 = [...testimonials.slice(3), ...testimonials.slice(0, 3), ...testimonials.slice(3), ...testimonials.slice(0, 3)];
+  const row2 = [...testimonials, ...testimonials];
 
   const TestimonialCard = ({ t }: { t: typeof testimonials[0] }) => (
     <div className="w-[320px] shrink-0 bg-white rounded-3xl p-6 shadow-sm border border-slate-100 mx-3">
@@ -165,7 +190,7 @@ export function FAQ() {
     },
     {
       q: "How do virtual consultations work?",
-      a: "Virtual consultations are conducted via our secure, HIPAA-compliant video platform. You'll receive a link via email and SMS before your appointment time.",
+      a: "Virtual consultations are conducted via our secure, PDPA-compliant video platform. You'll receive a link via email and SMS before your appointment time.",
     },
     {
       q: "Can I get a prescription from a virtual visit?",
@@ -173,7 +198,7 @@ export function FAQ() {
     },
     {
       q: "What if I need to cancel my appointment?",
-      a: "You can cancel or reschedule your appointment up to 24 hours in advance without any fees through your patient portal.",
+      a: "If you are unable to attend a booked appointment, please contact us as soon as possible. Email: info@samuihomeclinic.com Tel: +66-92-278-1988 or +66-77-937-288 Line ID: samuiclinic",
     },
   ];
 
@@ -231,81 +256,38 @@ export function FAQ() {
   );
 }
 
-export function Blog() {
-  const posts = [
-    {
-      id: 1,
-      title: "10 Essential Health Screenings for Adults",
-      category: "Preventive Care",
-      date: "Oct 12, 2023",
-      author: "Dr. Sarah Jenkins",
-      readTime: "5 min read",
-      img: "https://picsum.photos/seed/blog1/800/600",
-      content: "Regular health screenings are vital for early detection of potential issues. In this article, we cover the top 10 screenings every adult should consider, from blood pressure checks to cholesterol panels. Early detection can significantly improve treatment outcomes and overall quality of life. Don't wait for symptoms to appear—be proactive about your health today.",
-      tags: ["Screening", "Adult Health", "Wellness"]
-    },
-    {
-      id: 2,
-      title: "Understanding Telemedicine: What to Expect",
-      category: "Digital Health",
-      date: "Oct 05, 2023",
-      author: "Dr. Michael Chen",
-      readTime: "4 min read",
-      img: "https://picsum.photos/seed/blog2/800/600",
-      content: "Telemedicine has revolutionized how we access healthcare. Learn how to prepare for your first virtual consultation, what conditions can be treated online, and how our secure platform ensures your privacy. We'll walk you through the entire process so you can feel confident and comfortable receiving care from the comfort of your home.",
-      tags: ["Telehealth", "Virtual Care", "Innovation"]
-    },
-    {
-      id: 3,
-      title: "Nutrition Tips for a Strong Immune System",
-      category: "Wellness",
-      date: "Sep 28, 2023",
-      author: "Emily Roberts, RD",
-      readTime: "6 min read",
-      img: "https://picsum.photos/seed/blog3/800/600",
-      content: "Your diet plays a crucial role in supporting your immune system. Discover the best foods to incorporate into your daily meals, including vitamin C-rich fruits, leafy greens, and probiotics. We also discuss the importance of hydration and how to create balanced, nutrient-dense plates that keep you feeling your best year-round.",
-      tags: ["Nutrition", "Immunity", "Diet"]
-    },
-    {
-      id: 4,
-      title: "Managing Stress in a Fast-Paced World",
-      category: "Mental Health",
-      date: "Sep 15, 2023",
-      author: "Dr. Amanda Lewis",
-      readTime: "7 min read",
-      img: "https://picsum.photos/seed/blog4/800/600",
-      content: "Chronic stress can take a toll on both your physical and mental health. Explore effective stress management techniques, from mindfulness meditation to establishing healthy boundaries. Learn how to recognize the signs of burnout and when it's time to seek professional support.",
-      tags: ["Stress", "Mental Wellness", "Self-Care"]
-    },
-    {
-      id: 5,
-      title: "The Importance of Sleep for Overall Health",
-      category: "Wellness",
-      date: "Sep 02, 2023",
-      author: "Dr. Robert Patel",
-      readTime: "5 min read",
-      img: "https://picsum.photos/seed/blog5/800/600",
-      content: "Quality sleep is just as important as diet and exercise. We delve into the science of sleep, explaining how it affects brain function, immune response, and emotional well-being. Get practical tips for improving your sleep hygiene and creating a restful bedtime routine.",
-      tags: ["Sleep", "Recovery", "Health Tips"]
+function CatalogueAutoOpen({ onOpen }: { onOpen: () => void }) {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  useEffect(() => {
+    if (searchParams.get("catalogue") === "open") {
+      onOpen();
+      router.replace("/#blog", { scroll: false });
     }
-  ];
+  }, [searchParams, onOpen, router]);
+  return null;
+}
 
+export function Blog() {
+  const posts = BLOG_POSTS;
   const categories = ["All", "Preventive Care", "Digital Health", "Wellness", "Mental Health"];
 
-  const [selectedPost, setSelectedPost] = useState<typeof posts[0] | null>(null);
   const [isCatalogueOpen, setIsCatalogueOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
 
   const filteredPosts = posts.filter(post => {
-    const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           post.content.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === "All" || post.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
   return (
-    <section className="py-20 bg-[#fbfbfb]">
+    <section id="blog" className="py-20 bg-[#fbfbfb]">
+      <Suspense fallback={null}>
+        <CatalogueAutoOpen onOpen={() => setIsCatalogueOpen(true)} />
+      </Suspense>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <div className="inline-block px-3 py-1 rounded-full bg-[#edf9fa] border border-[#c9eff2] text-[#2d9aa2] text-xs font-bold uppercase tracking-wider mb-6">
@@ -324,37 +306,41 @@ export function Blog() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="w-[78vw] min-w-[78vw] shrink-0 snap-start md:w-auto md:min-w-0 group cursor-pointer flex flex-col h-full bg-white rounded-3xl shadow-md hover:shadow-xl border border-slate-100/80 overflow-hidden transition-all duration-300 hover:-translate-y-1"
-              onClick={() => setSelectedPost(post)}
+              className="w-[78vw] min-w-[78vw] shrink-0 snap-start md:w-auto md:min-w-0"
             >
-              <div className="relative w-full aspect-[3/2] overflow-hidden shrink-0">
-                <Image
-                  src={post.img}
-                  alt={post.title}
-                  fill
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  referrerPolicy="no-referrer"
-                />
-              </div>
-              <div className="p-6 flex flex-col flex-grow">
-                <div className="flex items-center gap-3 text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-                  <span className="text-[#3eb5bd]">{post.category}</span>
-                  <span>•</span>
-                  <span>{post.date}</span>
+              <Link
+                href={`/blog/${post.slug}`}
+                className="group flex flex-col h-full bg-white rounded-3xl shadow-md hover:shadow-xl border border-slate-100/80 overflow-hidden transition-all duration-300 hover:-translate-y-1"
+              >
+                <div className="relative w-full aspect-[3/2] overflow-hidden shrink-0">
+                  <Image
+                    src={post.img}
+                    alt={post.title}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    referrerPolicy="no-referrer"
+                  />
                 </div>
-                <h3 className="text-xl font-bold text-[#080708] group-hover:text-[#3eb5bd] transition-colors line-clamp-2 mb-3 flex-grow">
-                  {post.title}
-                </h3>
-                <p className="text-sm text-slate-600 line-clamp-2 mb-6">
-                  {post.content}
-                </p>
-                <div className="mt-auto pt-4 border-t border-slate-100 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-[#c9eff2] flex items-center justify-center text-[#3eb5bd] shrink-0">
-                    <User size={14} />
+                <div className="p-6 flex flex-col flex-grow">
+                  <div className="flex items-center gap-3 text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
+                    <span className="text-[#3eb5bd]">{post.category}</span>
+                    <span>•</span>
+                    <span>{post.date}</span>
                   </div>
-                  <span className="font-semibold text-sm text-[#080708]">{post.author}</span>
+                  <h3 className="text-xl font-bold text-[#080708] group-hover:text-[#3eb5bd] transition-colors line-clamp-2 mb-3 flex-grow">
+                    {post.title}
+                  </h3>
+                  <p className="text-sm text-slate-600 line-clamp-2 mb-6">
+                    {post.content}
+                  </p>
+                  <div className="mt-auto pt-4 border-t border-slate-100 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-[#c9eff2] flex items-center justify-center text-[#3eb5bd] shrink-0">
+                      <User size={14} />
+                    </div>
+                    <span className="font-semibold text-sm text-[#080708]">{post.author}</span>
+                  </div>
                 </div>
-              </div>
+              </Link>
             </motion.div>
           ))}
         </div>
@@ -368,108 +354,6 @@ export function Blog() {
           </button>
         </div>
       </div>
-
-      {/* Blog Detail Modal */}
-      <Dialog.Root open={!!selectedPost} onOpenChange={(open) => !open && setSelectedPost(null)}>
-        <AnimatePresence>
-          {selectedPost && (
-            <Dialog.Portal forceMount>
-              <Dialog.Overlay asChild>
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="fixed inset-0 z-50 bg-[#080708]/40 backdrop-blur-sm"
-                />
-              </Dialog.Overlay>
-              <Dialog.Content asChild>
-                <motion.div
-                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                  transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                  className="fixed left-[50%] top-[50%] z-50 w-full max-w-3xl -translate-x-[50%] -translate-y-[50%] bg-white rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
-                >
-                  <div className="relative h-64 md:h-80 shrink-0">
-                    <Image
-                      src={selectedPost.img}
-                      alt={selectedPost.title}
-                      fill
-                      className="object-cover"
-                      referrerPolicy="no-referrer"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#080708]/80 to-transparent" />
-                    <Dialog.Close className="absolute top-4 right-4 w-10 h-10 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-colors">
-                      <X size={20} />
-                    </Dialog.Close>
-                    <div className="absolute bottom-6 left-6 right-6">
-                      <div className="flex flex-wrap items-center gap-3 mb-3">
-                        <span className="bg-[#3eb5bd] text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
-                          {selectedPost.category}
-                        </span>
-                        <span className="flex items-center gap-1 text-white/90 text-sm font-medium">
-                          <Calendar size={14} />
-                          {selectedPost.date}
-                        </span>
-                        <span className="flex items-center gap-1 text-white/90 text-sm font-medium">
-                          <Clock size={14} />
-                          {selectedPost.readTime}
-                        </span>
-                      </div>
-                      <Dialog.Title className="text-2xl md:text-4xl font-heading font-bold text-white leading-tight">
-                        {selectedPost.title}
-                      </Dialog.Title>
-                    </div>
-                  </div>
-
-                  <div className="p-6 md:p-10 overflow-y-auto">
-                    {/* Trust & Geo Tags */}
-                    <div className="flex flex-wrap items-center gap-4 mb-8 pb-8 border-b border-slate-100">
-                      <div className="flex items-center gap-2 text-slate-700">
-                        <div className="w-10 h-10 rounded-full bg-[#c9eff2] flex items-center justify-center text-[#3eb5bd] shrink-0">
-                          <User size={20} />
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold">{selectedPost.author}</p>
-                          <p className="text-xs text-slate-500">Medical Expert</p>
-                        </div>
-                      </div>
-                      <div className="h-8 w-px bg-slate-200 hidden sm:block"></div>
-                      <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg">
-                        <ShieldCheck size={16} />
-                        <span className="text-xs font-bold">Medically Reviewed</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-slate-600 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
-                        <MapPin size={16} className="text-[#3eb5bd]" />
-                        <span className="text-xs font-medium">Koh Samui, Thailand</span>
-                      </div>
-                    </div>
-
-                    <article className="prose prose-slate prose-blue max-w-none">
-                      <p className="text-lg text-slate-600 leading-relaxed mb-6">
-                        {selectedPost.content}
-                      </p>
-                      {/* Placeholder for more rich content */}
-                      <h3 className="text-xl font-bold text-[#080708] mt-8 mb-4">Why This Matters</h3>
-                      <p className="text-slate-600 leading-relaxed mb-6">
-                        Taking proactive steps towards your health is the best investment you can make. Our team at Samui Home Clinic is dedicated to providing you with the most up-to-date information and personalized care to help you achieve your wellness goals.
-                      </p>
-                    </article>
-
-                    <div className="mt-10 pt-6 border-t border-slate-100 flex flex-wrap gap-2">
-                      {selectedPost.tags.map(tag => (
-                        <span key={tag} className="bg-slate-100 text-slate-600 text-xs font-medium px-3 py-1 rounded-full">
-                          #{tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </motion.div>
-              </Dialog.Content>
-            </Dialog.Portal>
-          )}
-        </AnimatePresence>
-      </Dialog.Root>
 
       {/* All Posts Catalogue Modal */}
       <Dialog.Root open={isCatalogueOpen} onOpenChange={setIsCatalogueOpen}>
@@ -537,13 +421,11 @@ export function Blog() {
                     {filteredPosts.length > 0 ? (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
                         {filteredPosts.map((post) => (
-                          <div
+                          <Link
                             key={post.id}
-                            onClick={() => {
-                              setSelectedPost(post);
-                              setIsCatalogueOpen(false);
-                            }}
-                            className="bg-white rounded-2xl overflow-hidden border border-slate-100 hover:shadow-xl transition-all duration-300 cursor-pointer group flex flex-col"
+                            href={`/blog/${post.slug}`}
+                            onClick={() => setIsCatalogueOpen(false)}
+                            className="bg-white rounded-2xl overflow-hidden border border-slate-100 hover:shadow-xl transition-all duration-300 group flex flex-col"
                           >
                             <div className="relative h-48 overflow-hidden shrink-0">
                               <Image
@@ -570,7 +452,7 @@ export function Blog() {
                                 {post.content}
                               </p>
                             </div>
-                          </div>
+                          </Link>
                         ))}
                       </div>
                     ) : (

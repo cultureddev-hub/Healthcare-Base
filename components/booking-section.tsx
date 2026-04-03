@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Calendar,
@@ -10,7 +10,8 @@ import {
   ChevronRight,
   ChevronLeft as ChevronLeftIcon,
   Search,
-  ArrowLeft
+  ArrowLeft,
+  ShieldCheck
 } from "lucide-react";
 import { useBooking } from "./booking-context";
 import { CustomSelect } from "./custom-select";
@@ -148,7 +149,10 @@ export function BookingForm({ isModal = false }: { isModal?: boolean }) {
   const { selectedService } = useBooking();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+  const [submitError, setSubmitError] = useState("");
+  const [pdpaConsent, setPdpaConsent] = useState(false);
+  const [pharmacyRedirect, setPharmacyRedirect] = useState<string | null>(null);
+
   // Step 1 State
   const [searchQuery, setSearchQuery] = useState("");
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
@@ -174,54 +178,114 @@ export function BookingForm({ isModal = false }: { isModal?: boolean }) {
   const SEARCH_PLACEHOLDERS = ["services", "treatment", "test", "vaccine", "IV Drip"];
 
   const DEPARTMENTS = [
-    { id: "all", name: "All services" },
-    { id: "general", name: "General Medical Care" },
-    { id: "vaccines", name: "Vaccines" },
-    { id: "sexual-health", name: "Sexual Health" },
-    { id: "iv-drip", name: "IV Drip Therapy" },
-    { id: "testing", name: "Medical Testing & Certificates" },
-    { id: "mens-health", name: "Men's Health" },
-    { id: "skin-care", name: "Skin Care" },
+    { id: "general-medicine",  name: "General Medicine" },
+    { id: "vaccines",          name: "Vaccines" },
+    { id: "sexual-health",     name: "Sexual Health" },
+    { id: "lab-tests",         name: "Lab Tests" },
+    { id: "iv-drips",          name: "IV Drips" },
+    { id: "health-checkups",   name: "Health Check-Ups" },
+    { id: "hormone-panels",    name: "Hormone Panels" },
+    { id: "allergy-tests",     name: "Allergy Tests" },
+    { id: "certificates",      name: "Certificates & Medical Exams" },
   ];
 
-  const SERVICES: Record<string, { id: string; name: string }[]> = {
-    all: [
-      { id: "all-1", name: "Standard Consultation" },
-      { id: "all-2", name: "Medical Certificate" },
-      { id: "all-3", name: "Prescription Refill" },
+  // Branch name constants
+  const C = "Chaweng";
+  const B = "Bangrak";
+  const R = "Rajabhat University";
+  const HV = "Home Visit";
+  const ALL_BRANCHES = [C, B, R, HV];
+
+  type ServiceEntry = { id: string; name: string; branches: string[] };
+  const SERVICES: Record<string, ServiceEntry[]> = {
+    "general-medicine": [
+      { id: "doctor-appointment",    name: "Doctor Appointment",                  branches: [C, B, R]    },
+      { id: "hotel-home-visit",      name: "Hotel / Home Visit",                  branches: [C, HV]      },
+      { id: "wound-care",            name: "Wound Care",                          branches: [C, B, R]    },
+      { id: "remove-suture",         name: "Remove Suture",                       branches: [C, B, R]    },
+      { id: "remove-staples",        name: "Remove Staples",                      branches: [C, B, R]    },
+      { id: "nebulization",          name: "Nebulization Therapy",                branches: [C]          },
+      { id: "ear-cleaning",          name: "Ear Cleaning",                        branches: [C]          },
+      { id: "repeat-prescriptions",  name: "Repeat Prescriptions",                branches: [C]          },
     ],
-    general: [
-      { id: "gen-1", name: "Standard Consultation" },
-      { id: "gen-2", name: "Medical Certificate" },
-      { id: "gen-3", name: "Prescription Refill" },
-    ],
-    vaccines: [
-      { id: "vac-1", name: "Flu Vaccine" },
-      { id: "vac-2", name: "Travel Vaccines" },
+    "vaccines": [
+      { id: "influenza-vaccine",  name: "Influenza Vaccine",                      branches: [C, B, R]    },
+      { id: "influenza-home",     name: "Influenza Vaccine at Home",              branches: [C, R]       },
+      { id: "efluelda",           name: "Efluelda (Elderly Flu Vaccine)",         branches: [C]          },
+      { id: "tetanus",            name: "Tetanus Vaccination (dT)",               branches: [C, B, R]    },
+      { id: "typhoid",            name: "Typhoid Vaccine",                        branches: [C, B, R]    },
+      { id: "twinrix",            name: "Twinrix (Hepatitis A&B)",                branches: [C, B]       },
+      { id: "meningococcal",      name: "MenQuadfi (Meningococcal ACYW)",         branches: [C]          },
+      { id: "rabies",             name: "Rabies Vaccination",                     branches: [C, B, R]    },
     ],
     "sexual-health": [
-      { id: "sh-1", name: "STD Testing" },
-      { id: "sh-2", name: "Consultation" },
+      { id: "sexual-health-check",       name: "Sexual Health Check",                     branches: [C]     },
+      { id: "hiv-test",                  name: "4th Generation HIV Test",                 branches: [C]     },
+      { id: "sti-test",                  name: "Gonorrhea / Chlamydia / Ureaplasma",      branches: [C]     },
+      { id: "syphilis-test",             name: "Syphilis Rapid Test",                     branches: [C]     },
+      { id: "hpv-test",                  name: "Urine HPV Test",                          branches: [C]     },
+      { id: "contraceptive-injection",   name: "Contraceptive Injection (Depo Gestin)",   branches: [C]     },
+      { id: "beta-hcg",                  name: "Pregnancy Blood Test (Beta hCG)",         branches: [C]     },
+      { id: "pap-smear",                 name: "PAP SMEAR (Thin Prep)",                   branches: [C, B]  },
     ],
-    "iv-drip": [
-      { id: "iv-1", name: "Hydration Drip" },
-      { id: "iv-2", name: "Vitamin C Drip" },
+    "lab-tests": [
+      { id: "lab-tests", name: "Blood & Laboratory Tests",                        branches: [C]          },
     ],
-    testing: [
-      { id: "test-1", name: "Blood Test" },
-      { id: "test-2", name: "Fit to Fly Certificate" },
+    "iv-drips": [
+      { id: "immune-booster-iv",          name: "Immune Booster",                          branches: ALL_BRANCHES },
+      { id: "essential-vitamins",         name: "Essential Vitamins",                      branches: ALL_BRANCHES },
+      { id: "post-covid",                 name: "Post Covid Recovery",                     branches: ALL_BRANCHES },
+      { id: "iron-infusion",              name: "Iron Infusion",                           branches: ALL_BRANCHES },
+      { id: "myers-cocktail",             name: "Myer's Cocktail",                         branches: ALL_BRANCHES },
+      { id: "power-recharge",             name: "Power Recharge",                          branches: ALL_BRANCHES },
+      { id: "pure-vitamin-c",             name: "Pure Vitamin C",                          branches: ALL_BRANCHES },
+      { id: "whitening-infusion",         name: "Whitening Infusion",                      branches: ALL_BRANCHES },
+      { id: "perfect-skin-iv",            name: "Perfect Skin IV",                         branches: ALL_BRANCHES },
+      { id: "liver-detox-iv",             name: "Liver Detox",                             branches: ALL_BRANCHES },
+      { id: "travellers-diarrhea",        name: "Traveller's Diarrhea Recovery",           branches: ALL_BRANCHES },
+      { id: "hangover-iv",                name: "Hangover Infusion",                       branches: ALL_BRANCHES },
+      { id: "cellular-detox",             name: "Cellular Detoxification",                 branches: ALL_BRANCHES },
+      { id: "nad-plus",                   name: "Anti-Aging: NAD+",                        branches: ALL_BRANCHES },
+      { id: "nad-plus-up",                name: "NAD+ UP",                                 branches: ALL_BRANCHES },
+      { id: "expert-diabetes",            name: "Expert Diabetes IV",                      branches: ALL_BRANCHES },
+      { id: "fat-burner-iv",              name: "Fat Burner IV",                           branches: ALL_BRANCHES },
+      { id: "brain-enhancer",             name: "Brain Enhancer",                          branches: ALL_BRANCHES },
+      { id: "insomnia-depression",        name: "Insomnia & Depression IV",                branches: ALL_BRANCHES },
+      { id: "hormone-booster-iv",         name: "Hormone Booster IV",                      branches: ALL_BRANCHES },
+      { id: "custom-infusion",            name: "Custom Infusion",                         branches: ALL_BRANCHES },
+      { id: "vitamin-b12-injection",      name: "Vitamin B12 Injection",                   branches: [C, B, R]    },
+      { id: "testosterone-injection",     name: "Testosterone Injection (Testoviron)",     branches: [B]          },
     ],
-    "mens-health": [
-      { id: "mh-1", name: "General Checkup" },
-      { id: "mh-2", name: "Hormone Testing" },
+    "health-checkups": [
+      { id: "promo-health-check",  name: "PROMOTION: Health Check Up",            branches: ALL_BRANCHES },
+      { id: "value-health-check",  name: "Value Package Health Check Up",         branches: ALL_BRANCHES },
+      { id: "drinkers-check",      name: "Drinker's Health Check Up",             branches: ALL_BRANCHES },
+      { id: "fitness-check",       name: "Fitness Health Check-Up",               branches: ALL_BRANCHES },
+      { id: "happy-life-check",    name: "Happy Life Program",                    branches: ALL_BRANCHES },
+      { id: "healthy-life-check",  name: "Healthy Life Program",                  branches: ALL_BRANCHES },
     ],
-    "skin-care": [
-      { id: "sk-1", name: "Acne Treatment" },
-      { id: "sk-2", name: "Skin Consultation" },
+    "hormone-panels": [
+      { id: "mid-age-hormone",        name: "Mid-Age Women's Hormone Panel (20–35)",  branches: ALL_BRANCHES },
+      { id: "teen-hormone",           name: "Teen Hormone Balance (13–19)",            branches: ALL_BRANCHES },
+      { id: "perimenopause-panel",    name: "Perimenopause Panel (35–50)",             branches: ALL_BRANCHES },
+      { id: "perimenopause-value",    name: "Perimenopause Value Check-Up",            branches: ALL_BRANCHES },
+      { id: "postmenopause-panel",    name: "Postmenopause Panel (50+)",               branches: ALL_BRANCHES },
+      { id: "female-hormone-balance", name: "Female Hormone Balance Check-Up",         branches: ALL_BRANCHES },
+    ],
+    "allergy-tests": [
+      { id: "inhalation-allergy",    name: "Inhalation Allergy (20 Allergens)",    branches: [C, B, R] },
+      { id: "pediatric-allergens",   name: "Pediatric Allergens (27 Tests)",       branches: [C]       },
+      { id: "food-20-allergens",     name: "Food Allergen Profile (20 Foods)",     branches: [C]       },
+      { id: "food-intolerance-222",  name: "Food Intolerance (IgG — 222 Foods)",  branches: [C]       },
+      { id: "food-inhalation-ige",   name: "Food & Inhalation IgE Profile",        branches: [C]       },
+    ],
+    "certificates": [
+      { id: "ekg",               name: "Electrocardiogram (EKG 12 Leads)",        branches: [C] },
+      { id: "cert-work-permit",  name: "Medical Certificate — Work Permit",        branches: [C] },
+      { id: "cert-driving",      name: "Medical Certificate — Driving Licence",    branches: [C] },
+      { id: "cert-diving",       name: "Medical Certificate — Diving (PADI)",      branches: [C] },
     ],
   };
-
-  const BRANCHES = ["Chaweng", "Bangrak", "Rajabhat University"];
 
   // Typewriter effect for search placeholder
   useEffect(() => {
@@ -244,6 +308,56 @@ export function BookingForm({ isModal = false }: { isModal?: boolean }) {
     }
   }, [selectedService]);
 
+  // --- Derived: current service entry (has branches) ---
+  const currentServiceData = useMemo<ServiceEntry | null>(() => {
+    if (!department || !service) return null;
+    return (SERVICES[department] ?? []).find(s => s.id === service) ?? null;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [department, service]);
+
+  // Branches available for the selected service
+  const availableBranches = currentServiceData?.branches ?? ALL_BRANCHES;
+
+  // Auto-select branch when only 1 option, or clear if current branch is no longer valid
+  useEffect(() => {
+    if (availableBranches.length === 1) {
+      setBranch(availableBranches[0]);
+    } else if (branch && !availableBranches.includes(branch)) {
+      setBranch("");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentServiceData]);
+
+  // Search ref for click-outside close
+  const searchRef = useRef<HTMLDivElement>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setSearchOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Flat search across all departments + services
+  const searchResults = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return [];
+    const results: { id: string; name: string; departmentId: string; departmentName: string; branches: string[] }[] = [];
+    for (const dept of DEPARTMENTS) {
+      for (const svc of SERVICES[dept.id] ?? []) {
+        if (svc.name.toLowerCase().includes(q)) {
+          results.push({ ...svc, departmentId: dept.id, departmentName: dept.name });
+        }
+      }
+    }
+    return results;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery]);
+
   const handleNext = () => {
     if (step < 3) setStep(step + 1);
   };
@@ -252,30 +366,66 @@ export function BookingForm({ isModal = false }: { isModal?: boolean }) {
     if (step > 1) setStep(step - 1);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const resetForm = () => {
+    setStep(1);
+    setSearchQuery("");
+    setDepartment("");
+    setService("");
+    setBranch("");
+    setDate(null);
+    setTime("");
+    setSubmitError("");
+    setPdpaConsent(false);
+    setPharmacyRedirect(null);
+    setFormData({ fullName: "", whatsapp: "", email: "", nationality: "", gender: "", dob: "", concerns: "" });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    // Simulate async submission
-    setTimeout(() => {
-      setIsSubmitting(false);
-      alert("Booking submitted successfully!");
-      setStep(1);
-      setSearchQuery("");
-      setDepartment("");
-      setService("");
-      setBranch("");
-      setDate(null);
-      setTime("");
-      setFormData({
-        fullName: "",
-        whatsapp: "",
-        email: "",
-        nationality: "",
-        gender: "",
-        dob: "",
-        concerns: ""
+    setSubmitError("");
+
+    try {
+      const res = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          service,
+          department,
+          branch,
+          date: date ? date.toISOString() : null,
+          time,
+          fullName: formData.fullName,
+          whatsapp: formData.whatsapp,
+          email: formData.email,
+          nationality: formData.nationality,
+          gender: formData.gender,
+          dob: formData.dob,
+          concerns: formData.concerns,
+          type: branch === "Home Visit" ? "home-visit" : "clinic",
+          pdpaConsent: true,
+        }),
       });
-    }, 1000);
+
+      const json = await res.json();
+
+      // COMP-02: Pharmacy keyword detected — show intercept UI, no booking created
+      if (json.redirect === "pharmacy") {
+        setPharmacyRedirect(json.whatsappUrl);
+        return;
+      }
+
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || "Booking failed");
+      }
+
+      // Advance to confirmation step
+      setStep(4);
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -285,19 +435,19 @@ export function BookingForm({ isModal = false }: { isModal?: boolean }) {
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-white/10 rounded-full z-0"></div>
               <div
                 className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-[#3eb5bd] rounded-full z-0 transition-all duration-500"
-                style={{ width: `${((step - 1) / 2) * 100}%` }}
+                style={{ width: `${((Math.min(step, 3) - 1) / 2) * 100}%` }}
               ></div>
 
               {[1, 2, 3].map((num) => (
                 <div
                   key={num}
                   className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors duration-300 ${
-                    step >= num
+                    Math.min(step, 3) >= num
                       ? "bg-[#3eb5bd] text-white"
                       : "bg-slate-800 text-slate-500 border border-white/10"
                   }`}
                 >
-                  {num}
+                  {step === 4 && num === 3 ? <CheckCircle2 size={16} /> : num}
                 </div>
               ))}
             </div>
@@ -325,20 +475,49 @@ export function BookingForm({ isModal = false }: { isModal?: boolean }) {
                     {/* Search Bar */}
                     {!isModal && (
                       <>
-                        <div className="relative">
-                          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <div className="relative" ref={searchRef}>
+                          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
                             <Search className="h-5 w-5 text-slate-400" />
                           </div>
                           <input
                             type="text"
                             value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onChange={(e) => { setSearchQuery(e.target.value); setSearchOpen(true); }}
+                            onFocus={() => setSearchOpen(true)}
                             className="block w-full pl-11 pr-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white placeholder-transparent focus:ring-2 focus:ring-[#3eb5bd] focus:border-transparent transition-all"
                             placeholder="Search..."
+                            autoComplete="off"
                           />
                           {!searchQuery && (
                             <div className="absolute inset-y-0 left-11 flex items-center pointer-events-none text-slate-400">
                               Search <span className="ml-1 text-[#5ec4cb] font-medium">{SEARCH_PLACEHOLDERS[placeholderIndex]}</span>
+                            </div>
+                          )}
+                          {/* Search results dropdown */}
+                          {searchOpen && searchResults.length > 0 && (
+                            <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-[#111213] border border-white/15 rounded-xl overflow-hidden shadow-2xl max-h-64 overflow-y-auto">
+                              {searchResults.map((result) => (
+                                <button
+                                  key={`${result.departmentId}-${result.id}`}
+                                  type="button"
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    setDepartment(result.departmentId);
+                                    setService(result.id);
+                                    setSearchQuery(result.name);
+                                    setSearchOpen(false);
+                                  }}
+                                  className="w-full text-left px-4 py-3 hover:bg-white/8 transition-colors flex flex-col gap-0.5 border-b border-white/5 last:border-0"
+                                >
+                                  <span className="text-sm text-white font-medium">{result.name}</span>
+                                  <span className="text-xs text-slate-500">{result.departmentName} · {result.branches.join(", ")}</span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                          {searchOpen && searchQuery.trim() && searchResults.length === 0 && (
+                            <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-[#111213] border border-white/15 rounded-xl px-4 py-3 shadow-2xl">
+                              <p className="text-sm text-slate-500">No services found for &ldquo;{searchQuery}&rdquo;</p>
                             </div>
                           )}
                         </div>
@@ -381,7 +560,7 @@ export function BookingForm({ isModal = false }: { isModal?: boolean }) {
 
                     <button
                       onClick={handleNext}
-                      disabled={!searchQuery && !service}
+                      disabled={!service}
                       className="w-full bg-[#3eb5bd] hover:bg-[#35a0a8] disabled:bg-slate-700 disabled:text-slate-500 text-white py-4 rounded-xl font-bold transition-colors flex items-center justify-center gap-2 mt-6"
                     >
                       Continue <ChevronRight size={18} />
@@ -419,9 +598,20 @@ export function BookingForm({ isModal = false }: { isModal?: boolean }) {
                         <CustomSelect
                           value={branch}
                           onChange={setBranch}
-                          placeholder="Select Branch"
-                          options={BRANCHES.map(b => ({ value: b, label: b }))}
+                          placeholder={availableBranches.length === 1 ? availableBranches[0] : "Select Branch"}
+                          options={availableBranches.map(b => ({ value: b, label: b }))}
+                          disabled={availableBranches.length === 1}
                         />
+                        {availableBranches.length === 1 && (
+                          <p className="text-xs text-[#5ec4cb]/80 mt-2 flex items-center gap-1.5">
+                            <span>★</span> This service is only available at {availableBranches[0]}.
+                          </p>
+                        )}
+                        {availableBranches.length > 1 && availableBranches.length < ALL_BRANCHES.length && (
+                          <p className="text-xs text-slate-500 mt-2">
+                            Available at: {availableBranches.join(" · ")}
+                          </p>
+                        )}
                       </div>
 
                       <div>
@@ -572,15 +762,49 @@ export function BookingForm({ isModal = false }: { isModal?: boolean }) {
                           ]}
                         />
                         <div className="space-y-1">
-                          <label htmlFor="booking-dob" className="text-xs font-bold text-slate-400 uppercase tracking-wider">Date of Birth</label>
-                          <input
-                            id="booking-dob"
-                            type="date"
-                            required
-                            value={formData.dob}
-                            onChange={(e) => setFormData({...formData, dob: e.target.value})}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-base placeholder-slate-500 focus:ring-2 focus:ring-[#3eb5bd] focus:border-transparent outline-none"
-                          />
+                          <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                            Date of Birth <span className="normal-case font-normal">(optional)</span>
+                          </label>
+                          {(() => {
+                            const [dobYear, dobMonth, dobDay] = formData.dob ? formData.dob.split('-') : ['', '', ''];
+                            const updateDob = (year: string, month: string, day: string) => {
+                              setFormData({ ...formData, dob: (year && month && day) ? `${year}-${month}-${day}` : '' });
+                            };
+                            const dayOptions = Array.from({ length: 31 }, (_, i) => ({ value: String(i + 1).padStart(2, '0'), label: String(i + 1) }));
+                            const monthOptions = [
+                              { value: '01', label: 'January' }, { value: '02', label: 'February' },
+                              { value: '03', label: 'March' }, { value: '04', label: 'April' },
+                              { value: '05', label: 'May' }, { value: '06', label: 'June' },
+                              { value: '07', label: 'July' }, { value: '08', label: 'August' },
+                              { value: '09', label: 'September' }, { value: '10', label: 'October' },
+                              { value: '11', label: 'November' }, { value: '12', label: 'December' },
+                            ];
+                            const currentYear = new Date().getFullYear();
+                            const yearOptions = Array.from({ length: 100 }, (_, i) => ({ value: String(currentYear - 16 - i), label: String(currentYear - 16 - i) }));
+                            return (
+                              <div className="grid grid-cols-3 gap-2">
+                                <CustomSelect
+                                  value={dobDay ?? ''}
+                                  onChange={(v) => updateDob(dobYear ?? '', dobMonth ?? '', v)}
+                                  options={dayOptions}
+                                  placeholder="Day"
+                                />
+                                <CustomSelect
+                                  value={dobMonth ?? ''}
+                                  onChange={(v) => updateDob(dobYear ?? '', v, dobDay ?? '')}
+                                  options={monthOptions}
+                                  placeholder="Month"
+                                />
+                                <CustomSelect
+                                  value={dobYear ?? ''}
+                                  onChange={(v) => updateDob(v, dobMonth ?? '', dobDay ?? '')}
+                                  options={yearOptions}
+                                  placeholder="Year"
+                                />
+                              </div>
+                            );
+                          })()}
+                          <p className="text-xs text-slate-500 mt-1">Required at check-in. Providing in advance speeds up your registration.</p>
                         </div>
                       </div>
 
@@ -618,10 +842,25 @@ export function BookingForm({ isModal = false }: { isModal?: boolean }) {
                         ></textarea>
                       </div>
 
+                      {/* PDPA Consent — COMP-01 (required before any submission) */}
+                      <label className="flex items-start gap-3 cursor-pointer group mt-2">
+                        <input
+                          type="checkbox"
+                          checked={pdpaConsent}
+                          onChange={(e) => setPdpaConsent(e.target.checked)}
+                          className="mt-0.5 h-4 w-4 rounded border-white/20 bg-white/5 text-[#3eb5bd] focus:ring-[#3eb5bd] focus:ring-offset-0 shrink-0 cursor-pointer"
+                        />
+                        <span className="text-xs text-slate-400 leading-relaxed">
+                          I consent to Samui Home Clinic collecting and processing my personal data for appointment and healthcare purposes, in accordance with Thailand&apos;s{" "}
+                          <span className="text-[#7fd3d7]">PDPA (B.E. 2562)</span>.{" "}
+                          <span className="text-slate-500">Your information is kept strictly confidential and used only to assist with your care.</span>
+                        </span>
+                      </label>
+
                       <button
                         type="submit"
-                        disabled={isSubmitting}
-                        className="w-full bg-[#3eb5bd] hover:bg-[#35a0a8] disabled:opacity-70 text-white py-4 rounded-xl font-bold transition-colors flex items-center justify-center gap-2 mt-6 cursor-pointer"
+                        disabled={isSubmitting || !pdpaConsent}
+                        className="w-full bg-[#3eb5bd] hover:bg-[#35a0a8] disabled:opacity-40 disabled:cursor-not-allowed text-white py-4 rounded-xl font-bold transition-colors flex items-center justify-center gap-2 mt-4 cursor-pointer"
                       >
                         {isSubmitting ? (
                           <>
@@ -632,7 +871,103 @@ export function BookingForm({ isModal = false }: { isModal?: boolean }) {
                           <>Confirm Booking <CheckCircle2 size={18} /></>
                         )}
                       </button>
+
+                      {submitError && (
+                        <p className="text-sm text-red-400 text-center mt-3">{submitError}</p>
+                      )}
                     </form>
+                  </motion.div>
+                )}
+                {/* COMP-02: Pharmacy Intercept Screen — shown when a prescription
+                    keyword was detected in concerns. No booking is created.
+                    Patient is routed to a confidential pharmacist channel. */}
+                {pharmacyRedirect && (
+                  <motion.div
+                    key="pharmacy-intercept"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex flex-col items-center justify-center text-center py-8 space-y-6"
+                  >
+                    <div className="w-16 h-16 rounded-full bg-amber-500/20 flex items-center justify-center">
+                      <ShieldCheck size={32} className="text-amber-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold mb-2">Confidential Pharmacy Enquiry</h3>
+                      <p className="text-slate-400 text-sm leading-relaxed max-w-xs mx-auto">
+                        For this type of request, our pharmacist is available for a private, confidential consultation. Please contact us directly.
+                      </p>
+                    </div>
+                    <div className="w-full space-y-3">
+                      <a
+                        href={pharmacyRedirect}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
+                      >
+                        WhatsApp a Pharmacist
+                      </a>
+                      <a
+                        href="tel:+660806696915"
+                        className="w-full bg-white/10 hover:bg-white/15 text-white py-4 rounded-xl font-bold transition-colors flex items-center justify-center gap-2"
+                      >
+                        Call Us Now
+                      </a>
+                    </div>
+                    <button
+                      onClick={resetForm}
+                      className="text-xs text-slate-500 hover:text-slate-300 transition-colors underline"
+                    >
+                      Back to booking
+                    </button>
+                  </motion.div>
+                )}
+
+                {step === 4 && !pharmacyRedirect && (
+                  <motion.div
+                    key="step4"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex flex-col items-center justify-center text-center py-8 space-y-6"
+                  >
+                    <div className="w-16 h-16 rounded-full bg-[#3eb5bd]/20 flex items-center justify-center">
+                      <CheckCircle2 size={32} className="text-[#3eb5bd]" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold mb-2">Booking Confirmed!</h3>
+                      <p className="text-slate-400 text-sm leading-relaxed max-w-xs mx-auto">
+                        We&apos;ve received your request. Our team will confirm your appointment via WhatsApp or email shortly.
+                      </p>
+                    </div>
+                    <div className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-left space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Service</span>
+                        <span className="text-white font-medium capitalize">{service.replace(/-/g, " ")}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Branch</span>
+                        <span className="text-white font-medium">{branch}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Date</span>
+                        <span className="text-white font-medium">
+                          {date?.toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short" })}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Time</span>
+                        <span className="text-white font-medium">{time}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Contact</span>
+                        <span className="text-white font-medium">{formData.whatsapp}</span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={resetForm}
+                      className="w-full bg-white/10 hover:bg-white/15 text-white py-3 rounded-xl font-semibold transition-colors text-sm"
+                    >
+                      Book Another Appointment
+                    </button>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -673,7 +1008,7 @@ export function BentoBooking() {
             <ul className="space-y-4">
               {[
                 "Same-day appointments available",
-                "Secure, HIPAA-compliant platform",
+                "Secure, PDPA-compliant platform",
                 "Insurance verified instantly",
               ].map((item, i) => (
                 <li key={i} className="flex items-center gap-3 text-slate-300">

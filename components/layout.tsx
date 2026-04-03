@@ -2,9 +2,8 @@
 
 import React from "react";
 import { motion } from "motion/react";
-import { Menu, X, PhoneCall, Globe } from "lucide-react";
+import { Menu, X, PhoneCall } from "lucide-react";
 import Image from "next/image";
-import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 
 import { useBooking } from "./booking-context";
 
@@ -59,24 +58,6 @@ export function Navbar() {
 
           {/* CTA */}
           <div className="hidden md:flex items-center space-x-4">
-            <DropdownMenu.Root>
-              <DropdownMenu.Trigger asChild>
-                <button className="flex items-center gap-1 text-sm font-medium text-slate-600 hover:text-[#080708] transition-colors focus:outline-none focus:ring-2 focus:ring-[#3eb5bd] focus:ring-offset-1 rounded-md px-1">
-                  <Globe size={16} />
-                  EN
-                </button>
-              </DropdownMenu.Trigger>
-              <DropdownMenu.Portal>
-                <DropdownMenu.Content className="min-w-[120px] bg-white rounded-xl shadow-xl border border-slate-100 p-2 z-50 animate-in fade-in zoom-in-95" sideOffset={8}>
-                  {['EN', 'TH', 'FR', 'IT', 'RU'].map((lang) => (
-                    <DropdownMenu.Item key={lang} className="text-sm font-medium text-slate-700 px-3 py-2 rounded-lg cursor-pointer hover:bg-slate-50 hover:text-[#3eb5bd] outline-none transition-colors">
-                      {lang}
-                    </DropdownMenu.Item>
-                  ))}
-                </DropdownMenu.Content>
-              </DropdownMenu.Portal>
-            </DropdownMenu.Root>
-
             <a href="tel:+660806696915" className="bg-slate-100 hover:bg-slate-200 text-[#080708] px-6 py-2.5 rounded-full text-sm font-medium transition-all hover:shadow-md hover:-translate-y-0.5 flex items-center gap-2">
               <PhoneCall size={16} />
               +66 080-669-6915
@@ -200,28 +181,47 @@ export function Footer() {
                 Lunch Break: 12:00 PM – 1:30 PM
               </div>
             </div>
+
+            {/* Canonical NAP (Name, Address, Phone) */}
+            <div className="mt-5 pt-5 border-t border-slate-800 flex flex-col gap-2 text-xs text-slate-400">
+              <a href="tel:+660806696915" className="flex items-center gap-2 hover:text-white transition-colors">
+                <PhoneCall size={12} className="text-[#3eb5bd] shrink-0" />
+                +66 080-669-6915 (Main)
+              </a>
+              <a href="tel:+66922781988" className="flex items-center gap-2 hover:text-white transition-colors">
+                <PhoneCall size={12} className="text-[#3eb5bd] shrink-0" />
+                +66 92-278-1988
+              </a>
+              <a href="tel:+6677937288" className="flex items-center gap-2 hover:text-white transition-colors">
+                <PhoneCall size={12} className="text-[#3eb5bd] shrink-0" />
+                +66 77-937-288
+              </a>
+              <a href="mailto:info@samuihomeclinic.com" className="hover:text-white transition-colors">
+                info@samuihomeclinic.com
+              </a>
+            </div>
           </div>
 
           <div>
             <h4 className="text-white font-semibold mb-4">Services</h4>
             <ul className="space-y-3 text-sm">
               <li>
-                <a href="#" className="hover:text-white transition-colors">
+                <a href="#services" className="hover:text-white transition-colors">
                   Virtual Consultations
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition-colors">
+                <a href="#services" className="hover:text-white transition-colors">
                   In-Person Visits
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition-colors">
+                <a href="#services" className="hover:text-white transition-colors">
                   Pediatric Care
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition-colors">
+                <a href="#services" className="hover:text-white transition-colors">
                   Preventive Care
                 </a>
               </li>
@@ -232,22 +232,22 @@ export function Footer() {
             <h4 className="text-white font-semibold mb-4">Company</h4>
             <ul className="space-y-3 text-sm">
               <li>
-                <a href="#" className="hover:text-white transition-colors">
+                <a href="#about" className="hover:text-white transition-colors">
                   About Us
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition-colors">
+                <a href="#doctors" className="hover:text-white transition-colors">
                   Our Doctors
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition-colors">
+                <a href="/blog/health-screening-koh-samui" className="hover:text-white transition-colors">
                   Latest Articles
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-white transition-colors">
+                <a href="mailto:info@samuihomeclinic.com" className="hover:text-white transition-colors">
                   Contact
                 </a>
               </li>
@@ -258,16 +258,19 @@ export function Footer() {
             <h4 className="text-white font-semibold mb-4">Legal</h4>
             <ul className="space-y-3 text-sm">
               <li>
+                {/* TODO: /privacy */}
                 <a href="#" className="hover:text-white transition-colors">
                   Privacy Policy
                 </a>
               </li>
               <li>
+                {/* TODO: /terms */}
                 <a href="#" className="hover:text-white transition-colors">
                   Terms of Service
                 </a>
               </li>
               <li>
+                {/* TODO: /cookies */}
                 <a href="#" className="hover:text-white transition-colors">
                   Cookie Policy
                 </a>
@@ -278,7 +281,7 @@ export function Footer() {
 
         <div className="mt-16 pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-sm text-slate-500">
-            © {new Date().getFullYear()} PrimeFamily Healthcare. All rights
+            © {new Date().getFullYear()} Samui Home Clinic. All rights
             reserved.
           </p>
           <div className="flex gap-4">
