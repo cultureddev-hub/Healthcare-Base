@@ -1529,7 +1529,7 @@ export function Services() {
                   initial={{ opacity: 0, scale: 0.95, y: 20 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                  className="fixed left-[50%] top-[50%] z-[70] w-full max-w-2xl -translate-x-[50%] -translate-y-[50%] bg-[#080708] rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+                  className="fixed left-[50%] top-[50%] z-[70] w-full max-w-2xl -translate-x-[50%] -translate-y-[50%] bg-[#080708] rounded-3xl shadow-2xl max-h-[90vh] flex flex-col"
                 >
                   <div className="flex items-center justify-between p-6 border-b border-white/10">
                     <Dialog.Title className="text-2xl font-bold text-white">Fast Booking</Dialog.Title>
@@ -1539,7 +1539,7 @@ export function Services() {
                       </button>
                     </Dialog.Close>
                   </div>
-                  <div className="overflow-y-auto">
+                  <div className="overflow-y-auto overflow-x-visible">
                     <BookingForm isModal={true} />
                   </div>
                 </motion.div>

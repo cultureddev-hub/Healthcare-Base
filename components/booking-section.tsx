@@ -770,37 +770,42 @@ export function BookingForm({ isModal = false }: { isModal?: boolean }) {
                             const updateDob = (year: string, month: string, day: string) => {
                               setFormData({ ...formData, dob: (year && month && day) ? `${year}-${month}-${day}` : '' });
                             };
-                            const dayOptions = Array.from({ length: 31 }, (_, i) => ({ value: String(i + 1).padStart(2, '0'), label: String(i + 1) }));
-                            const monthOptions = [
-                              { value: '01', label: 'January' }, { value: '02', label: 'February' },
-                              { value: '03', label: 'March' }, { value: '04', label: 'April' },
-                              { value: '05', label: 'May' }, { value: '06', label: 'June' },
-                              { value: '07', label: 'July' }, { value: '08', label: 'August' },
-                              { value: '09', label: 'September' }, { value: '10', label: 'October' },
-                              { value: '11', label: 'November' }, { value: '12', label: 'December' },
-                            ];
                             const currentYear = new Date().getFullYear();
-                            const yearOptions = Array.from({ length: 100 }, (_, i) => ({ value: String(currentYear - 16 - i), label: String(currentYear - 16 - i) }));
+                            const nativeSelectClass = "w-full bg-[#1a1a1a] border border-white/10 rounded-xl px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-[#3eb5bd] cursor-pointer appearance-none";
                             return (
                               <div className="grid grid-cols-3 gap-2">
-                                <CustomSelect
+                                <select
                                   value={dobDay ?? ''}
-                                  onChange={(v) => updateDob(dobYear ?? '', dobMonth ?? '', v)}
-                                  options={dayOptions}
-                                  placeholder="Day"
-                                />
-                                <CustomSelect
+                                  onChange={e => updateDob(dobYear ?? '', dobMonth ?? '', e.target.value)}
+                                  className={`${nativeSelectClass} ${dobDay ? 'text-white' : 'text-slate-500'}`}
+                                >
+                                  <option value="" disabled>Day</option>
+                                  {Array.from({ length: 31 }, (_, i) => {
+                                    const v = String(i + 1).padStart(2, '0');
+                                    return <option key={v} value={v}>{i + 1}</option>;
+                                  })}
+                                </select>
+                                <select
                                   value={dobMonth ?? ''}
-                                  onChange={(v) => updateDob(dobYear ?? '', v, dobDay ?? '')}
-                                  options={monthOptions}
-                                  placeholder="Month"
-                                />
-                                <CustomSelect
+                                  onChange={e => updateDob(dobYear ?? '', e.target.value, dobDay ?? '')}
+                                  className={`${nativeSelectClass} ${dobMonth ? 'text-white' : 'text-slate-500'}`}
+                                >
+                                  <option value="" disabled>Month</option>
+                                  {['January','February','March','April','May','June','July','August','September','October','November','December'].map((m, i) => (
+                                    <option key={i} value={String(i + 1).padStart(2, '0')}>{m}</option>
+                                  ))}
+                                </select>
+                                <select
                                   value={dobYear ?? ''}
-                                  onChange={(v) => updateDob(v, dobMonth ?? '', dobDay ?? '')}
-                                  options={yearOptions}
-                                  placeholder="Year"
-                                />
+                                  onChange={e => updateDob(e.target.value, dobMonth ?? '', dobDay ?? '')}
+                                  className={`${nativeSelectClass} ${dobYear ? 'text-white' : 'text-slate-500'}`}
+                                >
+                                  <option value="" disabled>Year</option>
+                                  {Array.from({ length: 100 }, (_, i) => {
+                                    const y = String(currentYear - 16 - i);
+                                    return <option key={y} value={y}>{y}</option>;
+                                  })}
+                                </select>
                               </div>
                             );
                           })()}

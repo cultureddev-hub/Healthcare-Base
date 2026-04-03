@@ -558,10 +558,10 @@ export function HomeVisitBookingModal({ onClose }: { onClose: () => void }) {
   const [address, setAddress] = useState("");
   const [date, setDate] = useState<Date | null>(null);
   const [time, setTime] = useState("");
-  const [formData, setFormData] = useState({ fullName: "", whatsapp: "", symptoms: "" });
+  const [formData, setFormData] = useState({ fullName: "", whatsapp: "", email: "", symptoms: "" });
 
   const isStep1Valid = address && date && time;
-  const isStep2Valid = formData.fullName && formData.whatsapp;
+  const isStep2Valid = formData.fullName && formData.whatsapp && formData.email;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -574,10 +574,12 @@ export function HomeVisitBookingModal({ onClose }: { onClose: () => void }) {
         body: JSON.stringify({
           fullName: formData.fullName,
           whatsapp: formData.whatsapp,
+          email: formData.email,
           symptoms: formData.symptoms,
           address,
           date: date ? date.toISOString() : null,
           time,
+          service: "Home Visit",
           type: "home-visit",
           pdpaConsent: true,
         }),
@@ -687,6 +689,10 @@ export function HomeVisitBookingModal({ onClose }: { onClose: () => void }) {
             <div className="space-y-1">
               <label htmlFor="homevisit-whatsapp" className="text-xs font-bold text-slate-400 uppercase tracking-wider">WhatsApp Number</label>
               <input id="homevisit-whatsapp" type="tel" placeholder="+66 000 000 0000" required value={formData.whatsapp} onChange={e => setFormData({...formData, whatsapp: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-base outline-none focus:ring-2 focus:ring-[#3eb5bd]"/>
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="homevisit-email" className="text-xs font-bold text-slate-400 uppercase tracking-wider">Email Address</label>
+              <input id="homevisit-email" type="email" placeholder="you@example.com" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-base outline-none focus:ring-2 focus:ring-[#3eb5bd]"/>
             </div>
             <div className="space-y-1">
               <label htmlFor="homevisit-symptoms" className="text-xs font-bold text-slate-400 uppercase tracking-wider">Symptoms <span className="normal-case font-normal">(optional)</span></label>
