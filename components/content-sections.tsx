@@ -5,6 +5,8 @@ import { useReducedMotion } from "motion/react";
 import { motion, AnimatePresence } from "motion/react";
 import Image from "next/image";
 import { CheckCircle2, ArrowRight, X, ShieldCheck, Star, MapPin, Search, ShoppingCart, Pill } from "lucide-react";
+import { ProductCard } from "./pharmacy/product-card";
+import type { PharmacyProduct } from "@/lib/types/cms";
 import * as Dialog from "@radix-ui/react-dialog";
 
 export function About() {
@@ -377,31 +379,23 @@ export function InsuranceTrust() {
   );
 }
 
-export function Pharmacy() {
+export function Pharmacy({ products = [] }: { products?: PharmacyProduct[] }) {
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
-  const [quantities, setQuantities] = useState<Record<number, number>>({});
 
-  const categories = ["All", "Prescription", "Over-the-Counter", "Vitamins", "First Aid"];
-
-  const products = [
-    { id: 1, name: "Paracetamol 500mg", category: "Over-the-Counter", price: "฿50", desc: "Pain relief and fever reduction." },
-    { id: 2, name: "Vitamin C 1000mg", category: "Vitamins", price: "฿350", desc: "Immune system support." },
-    { id: 3, name: "First Aid Kit Basic", category: "First Aid", price: "฿450", desc: "Essential supplies for minor injuries." },
-    { id: 4, name: "Antihistamine", category: "Over-the-Counter", price: "฿120", desc: "Allergy relief medication." },
-    { id: 5, name: "Antibiotic Ointment", category: "First Aid", price: "฿180", desc: "Prevents infection in minor cuts." },
-    { id: 6, name: "Multivitamin Complex", category: "Vitamins", price: "฿550", desc: "Daily essential nutrients." },
+  // Derive unique categories from CMS data, always prepending "All"
+  const categories = [
+    "All",
+    ...Array.from(new Set(products.map((p) => p.Category))).sort(),
   ];
 
-  const getQty = (id: number) => quantities[id] ?? 1;
-  const updateQty = (id: number, delta: number) => {
-    setQuantities(prev => ({ ...prev, [id]: Math.max(1, (prev[id] ?? 1) + delta) }));
-  };
-  const filteredProducts = products.filter(product => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          product.desc.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
+  const filteredProducts = products.filter((product) => {
+    const matchesSearch =
+      product.Item_Name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (product.Description ?? "").toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory =
+      selectedCategory === "All" || product.Category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
@@ -592,51 +586,19 @@ export function Pharmacy() {
                   {/* Content Area */}
                   <div className="flex-grow overflow-y-auto p-6 md:p-10 bg-slate-50">
                     <div className="max-w-7xl mx-auto grid lg:grid-cols-3 gap-8">
-                      {/* Left: Products Grid */}
+                      {/* Left: Products Grid — rendered via ProductCard (wired to Zustand cart) */}
                       <div className="lg:col-span-2">
                         {filteredProducts.length > 0 ? (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {filteredProducts.map((product) => (
-                              <div
-                                key={product.id}
-                                className="bg-white p-5 rounded-2xl border border-slate-100 hover:border-[#c9eff2] hover:shadow-md transition-all flex flex-col"
-                              >
-                                <div className="flex justify-between items-start mb-2">
-                                  <span className="text-xs font-bold text-[#2d9aa2] bg-[#edf9fa] px-2 py-1 rounded-md">
-                                    {product.category}
-                                  </span>
-                                  <span className="font-bold text-[#080708]">{product.price}</span>
-                                </div>
-                                <h3 className="text-lg font-bold text-[#080708] mb-1">{product.name}</h3>
-                                <p className="text-sm text-slate-500 mb-4 flex-grow">{product.desc}</p>
-
-                                {/* Quantity selector */}
-                                <div className="flex items-center justify-between mb-3">
-                                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Quantity</span>
-                                  <div className="flex items-center gap-2">
-                                    <button
-                                      onClick={() => updateQty(product.id, -1)}
-                                      className="w-7 h-7 rounded-full border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors font-bold text-sm"
-                                    >−</button>
-                                    <span className="w-6 text-center text-sm font-bold text-[#080708]">{getQty(product.id)}</span>
-                                    <button
-                                      onClick={() => updateQty(product.id, 1)}
-                                      className="w-7 h-7 rounded-full border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors font-bold text-sm"
-                                    >+</button>
-                                  </div>
-                                </div>
-
-                                <button className="w-full py-2 rounded-lg border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50 transition-colors flex items-center justify-center gap-2">
-                                  <ShoppingCart size={16} />
-                                  Add to Request
-                                </button>
-                              </div>
+                              <ProductCard key={product._id} product={product} />
                             ))}
                           </div>
                         ) : (
                           <div className="h-48 flex flex-col items-center justify-center text-slate-500 bg-white rounded-2xl border border-slate-100">
                             <Search size={32} className="mb-3 text-slate-300" />
                             <p className="font-medium">No products found.</p>
+                            <p className="text-sm mt-1">Try a different search or category.</p>
                           </div>
                         )}
                       </div>

@@ -6,6 +6,7 @@ import { Menu, X, PhoneCall } from "lucide-react";
 import Image from "next/image";
 
 import { useBooking } from "./booking-context";
+import { LanguageToggle } from "./language-toggle";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -58,6 +59,7 @@ export function Navbar() {
 
           {/* CTA */}
           <div className="hidden md:flex items-center space-x-4">
+            <LanguageToggle variant="navbar" />
             <a href="tel:+660806696915" className="bg-slate-100 hover:bg-slate-200 text-[#080708] px-6 py-2.5 rounded-full text-sm font-medium transition-all hover:shadow-md hover:-translate-y-0.5 flex items-center gap-2">
               <PhoneCall size={16} />
               +66 080-669-6915
@@ -119,6 +121,9 @@ export function Navbar() {
             About Us
           </a>
           <div className="pt-4 flex flex-col gap-3">
+            <div className="flex justify-center">
+              <LanguageToggle variant="navbar" />
+            </div>
             <a href="tel:+660806696915" className="w-full bg-slate-100 text-[#080708] px-6 py-3 rounded-xl text-base font-medium flex items-center justify-center gap-2">
               <PhoneCall size={18} />
               +66 080-669-6915
@@ -284,6 +289,7 @@ export function Footer() {
             © {new Date().getFullYear()} Samui Home Clinic. All rights
             reserved.
           </p>
+          <LanguageToggle variant="footer" />
           <div className="flex gap-4">
             {/* Social icons placeholders */}
             <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center hover:bg-slate-700 cursor-pointer transition-colors">

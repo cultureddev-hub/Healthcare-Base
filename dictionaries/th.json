@@ -1,0 +1,73 @@
+{
+  "nav": {
+    "services": "",
+    "howItWorks": "",
+    "ourDoctors": "",
+    "aboutUs": "",
+    "bookNow": "",
+    "openMenu": "",
+    "closeMenu": ""
+  },
+  "footer": {
+    "tagline": "",
+    "sections": {
+      "services": "",
+      "company": "",
+      "legal": ""
+    },
+    "links": {
+      "virtualConsultations": "",
+      "inPersonVisits": "",
+      "pediatricCare": "",
+      "preventiveCare": "",
+      "aboutUs": "",
+      "ourDoctors": "",
+      "latestArticles": "",
+      "contact": "",
+      "privacyPolicy": "",
+      "termsOfService": "",
+      "cookiePolicy": ""
+    },
+    "branches": {
+      "chaweng": "",
+      "bangrak": "",
+      "rajabhat": ""
+    },
+    "hours": {
+      "weekdays": "",
+      "weekends": "",
+      "lunch": ""
+    },
+    "copyright": ""
+  },
+  "common": {
+    "bookNow": "",
+    "bookAppointment": "",
+    "readMore": "",
+    "learnMore": "",
+    "callUs": "",
+    "allArticles": "",
+    "medicallyReviewed": "",
+    "keyStats": "",
+    "inThisArticle": "",
+    "relatedArticles": "",
+    "needMedicalCare": "",
+    "walkInInfo": "",
+    "weekdays": "",
+    "weekends": "",
+    "skipToContent": ""
+  },
+  "blog": {
+    "ctaTitle": "",
+    "ctaSubtitle": "",
+    "locationChaweng": "",
+    "locationBangrak": "",
+    "locationRajabhat": "",
+    "kohSamui": ""
+  },
+  "language": {
+    "en": "EN",
+    "th": "TH",
+    "label": ""
+  }
+}
