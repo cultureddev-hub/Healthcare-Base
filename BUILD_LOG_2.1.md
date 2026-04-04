@@ -5,6 +5,350 @@
 
 ---
 
+## [2026-04-04T00:00:00+07:00] — SESSION 2.3: Samui Home Pharmacy Launch + CMS Architecture + i18n Deep Audit
+
+### Session Mandate
+Deploy the full Samui Home Pharmacy asynchronous e-commerce engine. Finalise CMS data architecture (TAGS field types for staff UX). Conduct exhaustive i18n extraction. Generate Wix-native translation CSVs. Build a Node.js translation importer. Wire the Teams section to Wix CMS dynamically.
+
+---
+
+### Part 1 — Wix Velo Backend Deployment (Manual Steps Completed)
+
+The following files were manually deployed to the live Wix Editor by the client during this session:
+
+**`backend/data.js` (APPENDED — existing PHI hooks preserved):**
+Added `PharmacyOrders_afterUpdate` data hook that fires on the `Pending_Review → Approved_Awaiting_Payment` status transition. On trigger: calls `generatePaymentLink(orderId)` from `omise-stub.jsw`, writes the resulting URL back to `PharmacyOrders.Omise_Payment_Link` via `wixData.update()`, and logs the full WhatsApp handoff payload.
+
+**`backend/omise-stub.jsw` (NEW file):**
+Wix Web Module that reads `OMISE_SECRET_KEY` from Wix Secrets Manager. In stub mode (key = `sk_test_placeholder`), returns `https://mock.omise.co/pay/{orderId}`. Full Omise Charge Links API scaffolded as a TODO block for when the Omise account is provisioned.
+
+**Wix Secrets Manager:**
+Secret `OMISE_SECRET_KEY` added with value `sk_test_placeholder`. Ready to swap for a live key.
+
+**Pre-existing bug fixed during deployment:**
+`public/pdpa.js` line 31 contained a curly-quote apostrophe (`'`) inside a single-quoted string. Wix Velo parser rejected it. Character removed. Build status changed from `Error → Success`.
+
+**Reference copies (local, read-only):**
+- `_legacy_velo_reference/pharmacy-orders.events.js`
+- `_legacy_velo_reference/omise-stub.jsw`
+
+---
+
+### Part 2 — Vercel Build Fix
+
+**Error:** `Type error: Layout "app/[locale]/layout.tsx" does not match the required types of a Next.js Layout. "locales" is not a valid Layout export field.`
+
+**Root cause:** `export const locales` and `export type Locale` were named exports in a Next.js layout file. Next.js 15 reserves all named exports in layout files for framework use (`generateStaticParams`, `generateMetadata`, `default`). Any unrecognised named export causes a type error at build time.
+
+**Fix:** `export const` → `const`, `export type` → `type`. Both now unexported, scoped to file only. No downstream consumers.
+
+**File:** `app/[locale]/layout.tsx`
+**Commit:** `ef152c3`
+
+---
+
+### Part 3 — CMS Field Type Migration (Wix MCP API)
+
+**Motivation:** Staff were required to type Status and Category values freehand in the Wix Content Manager — error-prone and poor UX. Changed to `ARRAY_STRING` (TAGS) type so staff click to select values as chips.
+
+**Method:** `POST https://www.wixapis.com/wix-data/v2/collections/update-field` via Wix MCP server connection. Note: standard PATCH with field-mask is broken for type changes in the current Wix Data API — `update-field` endpoint was the correct route.
+
+| Collection | Field | Old Type | New Type | Allowed Values |
+|------------|-------|----------|----------|----------------|
+| `PharmacyOrders` | `Status` | TEXT | ARRAY_STRING (TAGS) | `Pending_Review`, `Approved_Awaiting_Payment`, `Paid`, `Dispatched` |
+| `PharmacyInventory` | `Category` | TEXT | ARRAY_STRING (TAGS) | `OTC`, `Rx` |
+| `Services` | `category` | TEXT | ARRAY_STRING (TAGS) | `General`, `IV Therapy`, `Aesthetic`, `Dental`, `Emergency`, `Pharmacy` |
+
+**Downstream TypeScript changes required by TAGS → string[] type:**
+
+| Interface | Field | Old Type | New Type |
+|-----------|-------|----------|----------|
+| `PharmacyOrder` | `Status` | `PharmacyOrderStatus` | `PharmacyOrderStatus \| PharmacyOrderStatus[]` |
+| `PharmacyProduct` | `Category` | `'OTC' \| 'Rx' \| string` | `string[]` |
+| `WixService` | `category` | `string` | `string[]` |
+| `WixTeamMember` | `Category_Tag` | (new field) | `string[]` |
+
+**Downstream SDK query changes:**
+- `getServices()` in `app/actions/cms.ts`: `.eq('category', category)` → `.hasSome('category', [category])`
+- `getTeam()` in `app/actions/cms.ts`: `.eq('role', role)` → `.hasSome('Category_Tag', [categoryTag])`
+
+**Downstream frontend changes (array-safe rendering):**
+- `components/pharmacy/product-card.tsx`: `product.Category` → `Array.isArray ? Category[0] : Category` for display; same for `addItem()` call
+- `components/content-sections.tsx` Pharmacy section: `products.map(p => p.Category)` → `products.flatMap(p => Array.isArray ? p.Category : [p.Category])` for category list; filter uses `.includes()` not `===`
+- `components/services-section.tsx` Team modal: `member.Category_Tag` rendered with `[0]` guard; filter uses `.includes(roleFilter)`
+
+**Velo reference file updated:**
+`_legacy_velo_reference/pharmacy-orders.events.js` — `item.Status` and `previousItem.Status` now read via `Array.isArray(x) ? x[0] : x` to handle the TAGS array type safely.
+
+---
+
+### Part 4 — Pharmacy UX Fixes
+
+| Fix | File | Change |
+|-----|------|--------|
+| CartFAB hidden behind catalogue modal | `components/pharmacy/cart-fab.tsx:30` | `z-40` → `z-60` (modal uses `z-50`; FAB must sit above it) |
+| Dispatch copy — missing islands | `components/pharmacy/patient-fulfillment-form.tsx` | `"...on Koh Samui."` → `"...on Koh Samui, Koh Phangan or Koh Tao."` |
+
+---
+
+### Part 5 — Date Field Fix (All CMS Collections)
+
+**Problem:** All date/datetime fields were being passed as ISO 8601 strings via `.toISOString()`. Wix CMS `Date and Time` fields expect a JavaScript `Date` object from the SDK. Passing a string caused a yellow type-mismatch warning in the Wix Content Manager on every record.
+
+**Fix:** Replaced `.toISOString()` with bare `new Date()` calls in all three server actions that write to date fields.
+
+| File | Line(s) | Change |
+|------|---------|--------|
+| `app/actions/pharmacy-orders.ts` | 64 | `new Date().toISOString()` → `new Date()` |
+| `app/actions/bookings.ts` | 56 | `new Date(date).toISOString()` → `new Date(date)` |
+| `app/actions/bookings.ts` | 62 | `new Date().toISOString()` → `new Date()` |
+| `app/actions/medical-inquiries.ts` | 99 | `new Date().toISOString()` → `new Date()` |
+| `app/actions/medical-inquiries.ts` | 100 | `new Date().toISOString()` → `new Date()` |
+
+> **Exception:** `cartWithMeta.submittedAt` (line 54, `pharmacy-orders.ts`) is inside `JSON.stringify()` destined for a TEXT field — left as `.toISOString()` intentionally.
+
+---
+
+### Part 6 — Teams CMS Dynamic Integration
+
+**Previous state:** `Team` component used 8 hardcoded team members. `getTeam()` existed in `cms.ts` but was never called.
+
+**New state:** `app/[locale]/page.tsx` calls `getTeam()` server-side and passes the result as `members` prop to `<Team>`. If the Wix `Team` CMS collection is empty, the component falls back to the hardcoded array (graceful degradation during CMS population period).
+
+**`WixTeamMember` interface updated** (`lib/types/cms.ts`):
+
+```typescript
+interface WixTeamMember {
+  name: string;
+  role: string;          // Specialty e.g. "General Practitioner"
+  role_th?: string;      // Thai localised specialty
+  Category_Tag: string[]; // TAGS field: ["Doctor"] | ["Nurse"] | ["Pharmacist"]
+  bio?: string;
+  bio_th?: string;
+  image?: string;
+  experience?: string;   // e.g. "15+ Years"
+  experience_th?: string;
+  branch?: string;
+  qualifications?: string[];
+  order?: number;
+}
+```
+
+**`PharmacyProduct` interface updated** (`lib/types/cms.ts`):
+Added `Item_Name_th?: string` and `Description_th?: string` for Thai localisation.
+
+**Rendering changes** (`components/services-section.tsx`):
+- Featured doctors grid: uses `doc.image` (not `doc.img`), `doc.role` (not `doc.spec`), experience badge conditionally rendered, initials fallback when no image
+- Modal team grid: same field mapping + `Category_Tag[0]` for role chip display
+- Filter logic: `Category_Tag.includes(roleFilter)` instead of `member.role === roleFilter`
+
+**Files modified:**
+- `lib/types/cms.ts` — interface updates
+- `app/actions/cms.ts` — `getTeam()` param renamed `categoryTag`, uses `.hasSome()`
+- `app/[locale]/page.tsx` — imports `getTeam`, fetches server-side, passes to `<Team>`
+- `components/services-section.tsx` — `FALLBACK_TEAM` constant, `Team({ members })` prop, array-safe rendering
+
+---
+
+### Part 7 — Wix-Native Translation CSVs
+
+Two CSV files generated at `/Users/asadkhan/Desktop/Cultured./Antigravity/Healthcare_SHC/data/` with headers matching **exact Wix CMS collection field keys** for native Dashboard import.
+
+**`cms_translations_team.csv`**
+Headers: `_id, name, role, role_th, Category_Tag, bio, bio_th, experience, experience_th, image`
+Content: 8 seed rows matching the hardcoded fallback team. All `_th` columns blank for translator. `_id` blank — Wix auto-generates on import. `image` blank — admin uploads via Content Manager.
+
+**`cms_translations_pharmacy.csv`**
+Headers: `_id, Item_Name, Item_Name_th, Price, Category, Requires_Prescription, Description, Description_th`
+Content: 8 products from previous sprint. `Price` is a bare integer — no ฿ symbol (Wix Number fields reject non-numeric characters). All `_th` columns blank for translator.
+
+**Import instructions:** Wix Dashboard → Content Manager → select collection → `Import` button → upload CSV.
+
+---
+
+### Part 8 — Deep i18n Audit & en.json Expansion
+
+**Previous state:** `en.json` covered `nav`, `footer`, `common`, `blog`, `language`, `pharmacy` — approximately 72 keys. All other sections (Hero, About, HowItWorks, Insurance, Team, FAQ, Testimonials) had 100% hardcoded English text in JSX.
+
+**New state:** `en.json` expanded to 213 keys across 13 key groups.
+
+**New key groups added:**
+
+| Group | Keys | Source Component | Notes |
+|-------|------|-----------------|-------|
+| `hero` | 35 | `hero-section.tsx` | Includes modal titles, placeholders, rotating words, operating hours, stat badges |
+| `about` | 30 | `content-sections.tsx` | Includes all modal content (story, why-choose-us cards, branch descriptions) |
+| `howItWorks` | 9 | `content-sections.tsx` | 3 steps with title + desc each |
+| `insurance` | 3 | `content-sections.tsx` | Badge, heading, description |
+| `team` | 10 | `services-section.tsx` | Filter buttons, search placeholder, empty state, view-all link |
+| `testimonials` | 3 | `social-proof.tsx` | Badge, heading, subtext |
+| `faq` | 10 | `social-proof.tsx` | Badge, heading, 4 Q&A pairs as flat keys (q1/a1…q4/a4) |
+| `blog` | 9 (restructured) | `social-proof.tsx` | Added badge, heading, category filter labels, noResults string |
+
+**Key naming convention enforced:** No bracket-notation keys (e.g. `bullets[4]`) anywhere in the dictionary. All repeated items use flat named keys (`bullet1`, `step2Title`, `q3`, `a3`). This guarantees the dot-notation splitter in the importer script produces clean nested JSON with no array/string type ambiguity.
+
+**`dictionaries/th.json`** updated to mirror all 213 keys as empty strings (full translation skeleton).
+
+**`data/ui_translations.csv`** regenerated — 213 rows, headers: `UI_Key, English_Text, Thai_Translation_Here`. Three pre-populated rows: `language.en=EN`, `language.th=TH`, `language.label=ภาษา` (non-translatable / confirmed Thai).
+
+---
+
+### Part 9 — Translation Importer Script
+
+**File:** `scripts/import-translations.js`
+
+**Dependency added:** `papaparse ^5.5.3` — RFC 4180-compliant CSV parser. Required because long-form UI strings (e.g. FAQ answers, About body text) contain internal commas inside quoted fields. A naive `split(',')` would corrupt these values. `papaparse` handles all quoting edge cases correctly.
+
+**Script logic:**
+1. Reads `data/ui_translations.csv` (path relative to `scripts/`)
+2. Parses with `Papa.parse(content, { header: true, skipEmptyLines: true })`
+3. Loads `dictionaries/en.json` as the structural skeleton (ensures `th.json` always has the same key structure as `en.json`)
+4. For each CSV row where `Thai_Translation_Here` is non-empty: calls `setNested(obj, dotKey, value)` — a local helper that splits dot-notation keys into nested JSON paths
+5. Writes the result to `dictionaries/th.json` (full overwrite, idempotent)
+6. Prints completion summary: total keys, translated count, empty count, percentage
+
+**`package.json` additions:**
+- Script: `"import-translations": "node scripts/import-translations.js"`
+- Dependency: `"papaparse": "^5.5.3"`
+
+**Usage:** After the translator returns the filled CSV → `npm run import-translations` → `th.json` is regenerated. Safe to run repeatedly as translations are filled in incrementally.
+
+---
+
+### Architectural Decisions Made This Session
+
+#### AD-08: TAGS Fields for Constrained CMS Values
+**Decision:** Wix CMS fields with a fixed set of allowed values (`Status`, `Category`, `category`, `Category_Tag`) changed from TEXT to ARRAY_STRING (TAGS) type.
+
+**Rationale:** TEXT fields require staff to type values freehand, which causes data inconsistency (e.g. `pending_review` vs `Pending_Review`). TAGS fields render as a chip-selector UI in the Content Manager — click to select, no typing required. This is critical for `Status` because the Velo data hook fires only on an exact string match.
+
+**Important caveat:** Wix's ARRAY_STRING field does not support predefined/constrained values at the API schema level. Allowed values are documented in each field's `description` property. Staff are responsible for selecting correct values from the documented list.
+
+**Side effect:** All TypeScript interfaces, SDK queries, and frontend rendering logic updated to treat these fields as `string[]` rather than `string`. The Velo hook updated to read `Status[0]` via `Array.isArray` guard.
+
+---
+
+#### AD-09: Teams CMS — Graceful Degradation Pattern
+**Decision:** The `Team` component accepts an optional `members?: WixTeamMember[]` prop. When the array is empty (CMS collection not yet populated), it falls back to `FALLBACK_TEAM` — the hardcoded array that was previously inline.
+
+**Rationale:** The Wix `Team` CMS collection will be populated gradually as the client uploads real team photos and fills Thai translations. A hard dependency on CMS data would cause the team section to render empty during this transition. The fallback ensures the section always shows meaningful content. Staff are informed via the CSV that the hardcoded data is the seed dataset.
+
+---
+
+#### AD-10: Flat Key Naming in Translation Dictionaries
+**Decision:** No bracket-notation array keys (e.g. `about.bullets[4]`) in `en.json` or `th.json`. All logically list-like items use flat named keys (`about.bullet1`, `howItWorks.step2Title`, `faq.q3`, `faq.a3`).
+
+**Rationale:** The translation importer script uses a dot-notation splitter (`key.split('.')`) to build nested JSON. Bracket notation would produce a literal key string (e.g. `"bullets[4]"`) rather than a JSON array, causing `.map()` calls on the frontend to crash with `Cannot read properties of string`. Flat named keys are unambiguous, produce clean nested JSON, and require the JSX to read each key individually — which is correct for translated content where each value may differ significantly in length between languages.
+
+---
+
+### Files Modified This Session
+
+| File | Change Type | Summary |
+|------|-------------|---------|
+| `app/[locale]/layout.tsx` | Fix | Removed invalid `export const locales` and `export type Locale` — Next.js 15 rejects unrecognised named exports from layout files |
+| `app/[locale]/page.tsx` | Update | Imports and calls `getTeam()` server-side; passes `teamMembers` as prop to `<Team>` |
+| `app/actions/cms.ts` | Update | `getTeam()` renamed param to `categoryTag`, uses `.hasSome('Category_Tag', [categoryTag])`; `getServices()` uses `.hasSome('category', [category])` |
+| `app/actions/pharmacy-orders.ts` | Fix | `Submitted_At: new Date().toISOString()` → `new Date()` |
+| `app/actions/bookings.ts` | Fix | `date` and `submittedAt` fields pass `Date` objects, not ISO strings |
+| `app/actions/medical-inquiries.ts` | Fix | `pdpaConsentTimestamp` and `submittedAt` pass `Date` objects, not ISO strings |
+| `lib/types/cms.ts` | Update | `WixTeamMember`: added `Category_Tag: string[]`, `role_th`, `experience`, `experience_th`; `PharmacyProduct`: `Category: string[]`, `Item_Name_th`, `Description_th`; `PharmacyOrder.Status`: union with `string[]`; `WixService.category`: `string[]` |
+| `components/pharmacy/cart-fab.tsx` | Fix | `z-40` → `z-60` |
+| `components/pharmacy/patient-fulfillment-form.tsx` | Fix | Dispatch copy updated to include Koh Phangan and Koh Tao |
+| `components/pharmacy/product-card.tsx` | Fix | `Category` display and `addItem()` call updated for `string[]` array type |
+| `components/content-sections.tsx` | Fix | Pharmacy category list uses `flatMap`; filter uses `.includes()` |
+| `components/services-section.tsx` | Update | `FALLBACK_TEAM` constant; `Team({ members })` prop; CMS field names (`role`, `image`, `experience`); array-safe `Category_Tag` rendering and filtering |
+| `_legacy_velo_reference/pharmacy-orders.events.js` | Update | `Status` reads use `Array.isArray(x) ? x[0] : x` guard for TAGS array compatibility |
+| `dictionaries/en.json` | Update | Expanded from 72 to 213 keys across 13 groups |
+| `dictionaries/th.json` | Update | Full skeleton rebuilt to match all 213 en.json keys |
+| `scripts/import-translations.js` | **New** | Node.js CSV → th.json importer using papaparse |
+| `package.json` | Update | Added `papaparse ^5.5.3` dependency; added `import-translations` script |
+
+---
+
+### Files Created Outside `healthcare_base/` (Data Assets)
+
+| File | Location | Purpose |
+|------|----------|---------|
+| `cms_translations_team.csv` | `data/` | Wix-native import CSV for Team collection — 8 seed rows, all `_th` columns blank |
+| `cms_translations_pharmacy.csv` | `data/` | Wix-native import CSV for PharmacyInventory — 8 products, bare Price numbers |
+| `ui_translations.csv` | `data/` | Complete 213-key UI translation file — English populated, Thai blank |
+
+---
+
+### CMS Collection Schema (Updated — Session 2.3)
+
+**`PharmacyOrders` collection:**
+
+| Field | Type Change | Notes |
+|-------|-------------|-------|
+| `Status` | TEXT → ARRAY_STRING (TAGS) | Values: `Pending_Review`, `Approved_Awaiting_Payment`, `Paid`, `Dispatched` |
+
+**`PharmacyInventory` collection:**
+
+| Field | Type Change | Notes |
+|-------|-------------|-------|
+| `Category` | TEXT → ARRAY_STRING (TAGS) | Values: `OTC`, `Rx` |
+
+**`Services` collection:**
+
+| Field | Type Change | Notes |
+|-------|-------------|-------|
+| `category` | TEXT → ARRAY_STRING (TAGS) | Values: `General`, `IV Therapy`, `Aesthetic`, `Dental`, `Emergency`, `Pharmacy` |
+
+**`Team` collection (schema required for CMS population):**
+
+| Field | Type | Notes |
+|-------|------|-------|
+| `name` | Text | Staff member full name |
+| `role` | Text | Specialty (e.g. "General Practitioner") |
+| `role_th` | Text | Thai localised specialty |
+| `Category_Tag` | ARRAY_STRING (TAGS) | `Doctor`, `Pharmacist`, or `Nurse` |
+| `bio` | Text (Long) | English biography |
+| `bio_th` | Text (Long) | Thai localised biography |
+| `experience` | Text | e.g. "15+ Years" |
+| `experience_th` | Text | Thai localised experience string |
+| `image` | Image / Media | Staff photo |
+
+---
+
+### Wix Velo Files Deployed (Manual — Session 2.3)
+
+| File | Action | Notes |
+|------|--------|-------|
+| `backend/data.js` | APPENDED | `PharmacyOrders_afterUpdate` hook added to bottom of file. Existing Bookings PHI hooks untouched. |
+| `backend/omise-stub.jsw` | CREATED | New Wix Web Module. Reads `OMISE_SECRET_KEY` from Secrets Manager. |
+| Wix Secrets Manager | Updated | `OMISE_SECRET_KEY = sk_test_placeholder` added |
+
+> **Action Required (future):** When Omise account is provisioned, replace `OMISE_SECRET_KEY` value in Wix Secrets Manager with the live `sk_live_...` key. The stub auto-activates real Omise mode when the key changes. Uncomment the production code block in `omise-stub.jsw`.
+
+---
+
+### Commits This Session
+
+| Commit | Hash | Summary |
+|--------|------|---------|
+| Layout named export fix | `ef152c3` | Fix invalid named exports from locale layout |
+| Full pharmacy + i18n + CMS session | `9bca906` | Teams CMS, TAGS fields, i18n audit, CSVs, importer script |
+
+---
+
+### Known Limitations & Phase 3 Backlog (Updated)
+
+| Item | Priority | Notes |
+|------|----------|-------|
+| Live slot availability | Medium | Hardcoded 9 AM–6 PM / 15-min slots. Phase 3: replace with `bookings.listTimeslots()` from `@wix/bookings`. |
+| CRM deduplication | Low | `allowDuplicates: true` creates new CRM contact per booking. Phase 3: use `appendOrCreateContact()`. |
+| Full Privacy Policy page | Medium | PDPA B.E. 2562 requires published privacy policy. Referenced in consent checkbox but page does not exist. |
+| Email confirmation | Medium | No transactional email on booking. Phase 3: Wix Triggered Email or Resend.com. |
+| Booking status webhook | Low | `status: 'pending'` never updated. Phase 3: Wix automation or webhook for `confirmed`/`cancelled`. |
+| Wix Media Manager upload (Rx prescriptions) | Low | Prescription file upload stores filename only in `Cart_Payload`. Actual file upload via Wix Media Manager deferred. Admin follows up via WhatsApp. |
+| Thai translations | Pending client | `th.json` skeleton complete (213 keys). `ui_translations.csv` sent to translator. Run `npm run import-translations` when returned. |
+| Team CMS population | Pending client | `cms_translations_team.csv` ready for import. Admin must upload staff photos via Wix Content Manager after import. |
+| Pharmacy CMS population | Pending client | `cms_translations_pharmacy.csv` ready for import. Thai product names/descriptions to be filled by translator. |
+
+---
+
 ## [2026-04-03T00:00:00+07:00] — SESSION 2.2: Full Backend Integration & PDPA Compliance Activation
 
 ### Session Mandate
