@@ -12,8 +12,8 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
-export const locales = ['en', 'th'] as const;
-export type Locale = (typeof locales)[number];
+const locales = ['en', 'th'] as const;
+type Locale = (typeof locales)[number];
 
 interface LocaleLayoutProps {
   children: React.ReactNode;
