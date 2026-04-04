@@ -96,8 +96,8 @@ export async function submitMedicalInquiry(
     contactId,
     service,
     pdpaConsentGiven,
-    pdpaConsentTimestamp: new Date().toISOString(),
-    submittedAt: new Date().toISOString(),
+    pdpaConsentTimestamp: new Date(),
+    submittedAt: new Date(),
   };
 
   const result = await adminWixClient.items.insert('MedicalInquiries', dataItem as Partial<WixDataItem>);

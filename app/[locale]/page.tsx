@@ -20,6 +20,7 @@ import {
 import { Services, Team } from '@/components/services-section';
 import { Testimonials, FAQ, Blog } from '@/components/social-proof';
 import { getPharmacyInventory } from '@/app/actions/pharmacy-inventory';
+import { getTeam } from '@/app/actions/cms';
 
 const locales = ['en', 'th'] as const;
 type Locale = (typeof locales)[number];
@@ -42,6 +43,7 @@ export default async function LocaleHome({ params }: LocaleHomeProps) {
   // Fetch pharmacy inventory server-side — passed as prop to the Pharmacy
   // client component. Falls back to empty array on network error (non-fatal).
   const pharmacyProducts = await getPharmacyInventory();
+  const teamMembers = await getTeam();
 
   return (
     <main
@@ -68,7 +70,7 @@ export default async function LocaleHome({ params }: LocaleHomeProps) {
       <InsuranceTrust />
       <Pharmacy products={pharmacyProducts} />
       <Testimonials />
-      <Team />
+      <Team members={teamMembers} />
       <FAQ />
       <Blog />
 

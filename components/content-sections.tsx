@@ -385,17 +385,23 @@ export function Pharmacy({ products = [] }: { products?: PharmacyProduct[] }) {
   const [selectedCategory, setSelectedCategory] = useState("All");
 
   // Derive unique categories from CMS data, always prepending "All"
+  // Category is a TAGS field (string[]) — flatten before deduplicating
   const categories = [
     "All",
-    ...Array.from(new Set(products.map((p) => p.Category))).sort(),
+    ...Array.from(
+      new Set(products.flatMap((p) => (Array.isArray(p.Category) ? p.Category : [p.Category])))
+    ).sort(),
   ];
 
   const filteredProducts = products.filter((product) => {
     const matchesSearch =
       product.Item_Name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (product.Description ?? "").toLowerCase().includes(searchQuery.toLowerCase());
+    const productCategories = Array.isArray(product.Category)
+      ? product.Category
+      : [product.Category];
     const matchesCategory =
-      selectedCategory === "All" || product.Category === selectedCategory;
+      selectedCategory === "All" || productCategories.includes(selectedCategory);
     return matchesSearch && matchesCategory;
   });
 

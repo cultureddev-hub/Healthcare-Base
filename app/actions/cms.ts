@@ -44,7 +44,7 @@ export async function getServices({
   limit = 50,
 }: { category?: string; limit?: number } = {}) {
   let q = wixClient.items.query(COLLECTIONS.services).ascending('title').limit(limit);
-  if (category) q = q.eq('category', category);
+  if (category) q = q.hasSome('category', [category]);
   const { items } = await q.find();
   return items;
 }
@@ -70,15 +70,16 @@ export async function getServiceByTitle(title: string) {
  *
  * Query the Team collection, sorted by name ascending.
  *
- * @param opts.role  — Filter by role (e.g. "Doctor", "Nurse")
- * @param opts.limit — Max items to return (default: 20)
+ * @param opts.categoryTag — Filter by Category_Tag TAGS field (e.g. "Doctor", "Nurse")
+ * @param opts.limit       — Max items to return (default: 20)
  */
 export async function getTeam({
-  role,
+  categoryTag,
   limit = 20,
-}: { role?: string; limit?: number } = {}) {
+}: { categoryTag?: string; limit?: number } = {}) {
   let q = wixClient.items.query(COLLECTIONS.team).ascending('name').limit(limit);
-  if (role) q = q.eq('role', role);
+  // Category_Tag is a TAGS (array) field — must use hasSome, not eq
+  if (categoryTag) q = q.hasSome('Category_Tag', [categoryTag]);
   const { items } = await q.find();
   return items;
 }

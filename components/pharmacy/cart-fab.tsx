@@ -27,7 +27,7 @@ export function CartFAB({ onOpen }: CartFABProps) {
         whileHover={{ scale: 1.06 }}
         whileTap={{ scale: 0.94 }}
         onClick={onOpen}
-        className="fixed bottom-6 right-6 z-40 w-14 h-14 bg-[#3eb5bd] hover:bg-[#35a0a8] text-white rounded-full shadow-xl shadow-[#3eb5bd]/30 flex items-center justify-center transition-colors focus:outline-none focus:ring-4 focus:ring-[#3eb5bd]/30"
+        className="fixed bottom-6 right-6 z-60 w-14 h-14 bg-[#3eb5bd] hover:bg-[#35a0a8] text-white rounded-full shadow-xl shadow-[#3eb5bd]/30 flex items-center justify-center transition-colors focus:outline-none focus:ring-4 focus:ring-[#3eb5bd]/30"
         aria-label={`Open cart — ${count} item${count !== 1 ? "s" : ""}`}
       >
         <ShoppingCart size={22} />

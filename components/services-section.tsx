@@ -25,6 +25,7 @@ import {
 import * as Dialog from "@radix-ui/react-dialog";
 import { useBooking } from "./booking-context";
 import { BookingForm } from "./booking-section";
+import type { WixTeamMember } from "@/lib/types/cms";
 
 const SERVICES_DATA = [
   // ── GENERAL MEDICINE ──────────────────────────────────────────────────────
@@ -1552,28 +1553,35 @@ export function Services() {
   );
 }
 
-export function Team() {
+// Hardcoded fallback — displayed when Wix CMS Team collection is empty
+const FALLBACK_TEAM: WixTeamMember[] = [
+  { _id: "f1", name: "Dr. Sarah Jenkins", role: "General Practitioner", Category_Tag: ["Doctor"], image: "https://picsum.photos/seed/doc1/400/400", experience: "15+ Years" },
+  { _id: "f2", name: "Dr. Michael Chen", role: "Pediatrician", Category_Tag: ["Doctor"], image: "https://picsum.photos/seed/doc2/400/400", experience: "12+ Years" },
+  { _id: "f3", name: "Dr. Emily Rodriguez", role: "Dermatologist", Category_Tag: ["Doctor"], image: "https://picsum.photos/seed/doc3/400/400", experience: "10+ Years" },
+  { _id: "f4", name: "Dr. James Wilson", role: "Cardiologist", Category_Tag: ["Doctor"], image: "https://picsum.photos/seed/doc4/400/400", experience: "20+ Years" },
+  { _id: "f5", name: "Alex Thompson", role: "Clinical Pharmacist", Category_Tag: ["Pharmacist"], image: "https://picsum.photos/seed/pharm1/400/400", experience: "8+ Years" },
+  { _id: "f6", name: "Linda Park", role: "Senior Pharmacist", Category_Tag: ["Pharmacist"], image: "https://picsum.photos/seed/pharm2/400/400", experience: "14+ Years" },
+  { _id: "f7", name: "Maria Santos", role: "Registered Nurse", Category_Tag: ["Nurse"], image: "https://picsum.photos/seed/nurse1/400/400", experience: "7+ Years" },
+  { _id: "f8", name: "Tom Nakamura", role: "Senior Nurse", Category_Tag: ["Nurse"], image: "https://picsum.photos/seed/nurse2/400/400", experience: "11+ Years" },
+];
+
+export function Team({ members = [] }: { members?: WixTeamMember[] }) {
   const [isTeamCatalogueOpen, setIsTeamCatalogueOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("All");
 
-  const allTeamMembers = [
-    { name: "Dr. Sarah Jenkins", spec: "General Practitioner", img: "https://picsum.photos/seed/doc1/400/400", experience: "15+ Years", role: "Doctor" },
-    { name: "Dr. Michael Chen", spec: "Pediatrician", img: "https://picsum.photos/seed/doc2/400/400", experience: "12+ Years", role: "Doctor" },
-    { name: "Dr. Emily Rodriguez", spec: "Dermatologist", img: "https://picsum.photos/seed/doc3/400/400", experience: "10+ Years", role: "Doctor" },
-    { name: "Dr. James Wilson", spec: "Cardiologist", img: "https://picsum.photos/seed/doc4/400/400", experience: "20+ Years", role: "Doctor" },
-    { name: "Alex Thompson", spec: "Clinical Pharmacist", img: "https://picsum.photos/seed/pharm1/400/400", experience: "8+ Years", role: "Pharmacist" },
-    { name: "Linda Park", spec: "Senior Pharmacist", img: "https://picsum.photos/seed/pharm2/400/400", experience: "14+ Years", role: "Pharmacist" },
-    { name: "Maria Santos", spec: "Registered Nurse", img: "https://picsum.photos/seed/nurse1/400/400", experience: "7+ Years", role: "Nurse" },
-    { name: "Tom Nakamura", spec: "Senior Nurse", img: "https://picsum.photos/seed/nurse2/400/400", experience: "11+ Years", role: "Nurse" },
-  ];
+  // Use CMS data if available, else show hardcoded fallback
+  const allTeamMembers = members.length > 0 ? members : FALLBACK_TEAM;
 
-  const featuredDoctors = allTeamMembers.filter(m => m.role === "Doctor");
+  const featuredDoctors = allTeamMembers.filter(m =>
+    Array.isArray(m.Category_Tag) ? m.Category_Tag.includes("Doctor") : m.Category_Tag === "Doctor"
+  );
 
   const filteredMembers = allTeamMembers.filter(member => {
     const matchesSearch = member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          member.spec.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesRole = roleFilter === "All" || member.role === roleFilter;
+                          member.role.toLowerCase().includes(searchQuery.toLowerCase());
+    const memberTags = Array.isArray(member.Category_Tag) ? member.Category_Tag : [member.Category_Tag];
+    const matchesRole = roleFilter === "All" || memberTags.includes(roleFilter);
     return matchesSearch && matchesRole;
   });
 
@@ -1592,7 +1600,7 @@ export function Team() {
         <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 -mx-4 px-4 no-scrollbar sm:grid sm:grid-cols-2 sm:overflow-visible sm:pb-0 sm:mx-0 sm:px-0 lg:grid-cols-4 sm:gap-6">
           {featuredDoctors.map((doc, i) => (
             <motion.div
-              key={i}
+              key={doc._id ?? i}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -1600,21 +1608,29 @@ export function Team() {
               className="w-[65vw] min-w-[65vw] shrink-0 snap-start sm:w-auto sm:min-w-0 bg-white rounded-3xl p-4 shadow-sm border border-slate-100 group hover:shadow-md transition-shadow relative cursor-default"
             >
               <div className="relative w-full aspect-square rounded-2xl overflow-hidden mb-4 bg-slate-100">
-                <Image
-                  src={doc.img}
-                  alt={doc.name}
-                  fill
-                  className="object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="absolute top-2 left-2 flex gap-2">
-                  <span className="bg-[#3eb5bd] px-2 py-1 rounded-lg text-[10px] font-bold text-white shadow-sm">
-                    {doc.experience}
-                  </span>
-                </div>
+                {doc.image ? (
+                  <Image
+                    src={doc.image}
+                    alt={doc.name}
+                    fill
+                    className="object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-slate-200 flex items-center justify-center text-slate-400 text-4xl font-bold">
+                    {doc.name.charAt(0)}
+                  </div>
+                )}
+                {doc.experience && (
+                  <div className="absolute top-2 left-2 flex gap-2">
+                    <span className="bg-[#3eb5bd] px-2 py-1 rounded-lg text-[10px] font-bold text-white shadow-sm">
+                      {doc.experience}
+                    </span>
+                  </div>
+                )}
               </div>
               <h3 className="text-lg font-bold text-[#080708]">{doc.name}</h3>
-              <p className="text-sm text-[#3eb5bd] font-medium">{doc.spec}</p>
+              <p className="text-sm text-[#3eb5bd] font-medium">{doc.role}</p>
             </motion.div>
           ))}
         </div>
@@ -1694,26 +1710,36 @@ export function Team() {
                       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
                         {filteredMembers.map((member, i) => (
                           <div
-                            key={i}
+                            key={member._id ?? i}
                             className="bg-white rounded-2xl p-4 border border-slate-100 hover:shadow-md transition-shadow"
                           >
                             <div className="relative w-full aspect-square rounded-xl overflow-hidden mb-3 bg-slate-100">
-                              <Image
-                                src={member.img}
-                                alt={member.name}
-                                fill
-                                className="object-cover grayscale hover:grayscale-0 transition-all duration-500"
-                                referrerPolicy="no-referrer"
-                              />
-                              <div className="absolute top-2 left-2">
-                                <span className="bg-[#3eb5bd] px-2 py-1 rounded-lg text-[10px] font-bold text-white shadow-sm">
-                                  {member.experience}
-                                </span>
-                              </div>
+                              {member.image ? (
+                                <Image
+                                  src={member.image}
+                                  alt={member.name}
+                                  fill
+                                  className="object-cover grayscale hover:grayscale-0 transition-all duration-500"
+                                  referrerPolicy="no-referrer"
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-slate-200 flex items-center justify-center text-slate-400 text-3xl font-bold">
+                                  {member.name.charAt(0)}
+                                </div>
+                              )}
+                              {member.experience && (
+                                <div className="absolute top-2 left-2">
+                                  <span className="bg-[#3eb5bd] px-2 py-1 rounded-lg text-[10px] font-bold text-white shadow-sm">
+                                    {member.experience}
+                                  </span>
+                                </div>
+                              )}
                             </div>
-                            <p className="text-xs font-bold text-[#1D84D7] uppercase tracking-wider mb-1">{member.role}</p>
+                            <p className="text-xs font-bold text-[#1D84D7] uppercase tracking-wider mb-1">
+                              {Array.isArray(member.Category_Tag) ? member.Category_Tag[0] : member.Category_Tag}
+                            </p>
                             <h3 className="text-sm font-bold text-[#080708] leading-tight">{member.name}</h3>
-                            <p className="text-xs text-[#3eb5bd] font-medium mt-0.5">{member.spec}</p>
+                            <p className="text-xs text-[#3eb5bd] font-medium mt-0.5">{member.role}</p>
                           </div>
                         ))}
                       </div>

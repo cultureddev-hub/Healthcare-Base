@@ -52,8 +52,11 @@ import { generatePaymentLink } from 'backend/omise-stub';
 export async function PharmacyOrders_afterUpdate(event) {
   const { item, previousItem } = event;
 
-  const prevStatus = previousItem.Status;
-  const newStatus = item.Status;
+  // Status is a TAGS field — Wix returns it as an array (e.g. ["Pending_Review"])
+  const prevStatus = Array.isArray(previousItem.Status)
+    ? previousItem.Status[0]
+    : previousItem.Status;
+  const newStatus = Array.isArray(item.Status) ? item.Status[0] : item.Status;
 
   // Only trigger on the specific Pending_Review → Approved_Awaiting_Payment transition
   if (

@@ -166,7 +166,7 @@ export function PatientFulfillmentForm() {
                 {
                   icon: <Send size={14} />,
                   label: "Dispatch",
-                  desc: "Order is packed and dispatched to your address on Koh Samui.",
+                  desc: "Order is packed and dispatched to your address on Koh Samui, Koh Phangan or Koh Tao.",
                 },
               ] as const
             ).map((step, i) => (

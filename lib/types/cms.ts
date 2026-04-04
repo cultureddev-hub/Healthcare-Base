@@ -47,7 +47,7 @@ export interface WixService extends WixBaseRecord {
   policy_th?: string;
 
   // Non-translated metadata
-  category?: string;
+  category?: string[]; // TAGS field — e.g. ["General"] or ["Pharmacy"]
   price?: string;
   duration?: string;
   image?: string;
@@ -91,14 +91,20 @@ export interface WixDepartment extends WixBaseRecord {
 export interface WixTeamMember extends WixBaseRecord {
   // English (base)
   name: string;
-  role: string;
+  role: string;        // Specialty e.g. "General Practitioner", "Cardiologist"
   bio?: string;
 
-  // Thai (localised — doctor bio only, not name)
+  // Thai (localised)
+  role_th?: string;
   bio_th?: string;
+
+  // Category (TAGS field — e.g. ["Doctor"], ["Nurse"], ["Pharmacist"])
+  Category_Tag: string[];
 
   // Non-translated
   image?: string;
+  experience?: string;      // e.g. "15+ Years"
+  experience_th?: string;
   branch?: string;
   qualifications?: string[];
   order?: number;
@@ -161,11 +167,13 @@ export interface WixBlogPost extends WixBaseRecord {
  */
 export interface PharmacyProduct extends WixBaseRecord {
   Item_Name: string;
+  Item_Name_th?: string;
   Price: number;
-  Category: 'OTC' | 'Rx' | string;
+  Category: string[]; // TAGS field — e.g. ["OTC"] or ["Rx"]
   Image?: { url?: string; height?: number; width?: number } | string;
   Requires_Prescription: boolean;
   Description?: string;
+  Description_th?: string;
 }
 
 // ── Cart Item (shared: store + server actions) ────────────────────────────────
@@ -207,7 +215,7 @@ export interface PharmacyOrder extends WixBaseRecord {
   Cart_Payload: string; // JSON string: CartItem[]
   Prescription_File?: string; // Wix Media document URL (future: upload via Media Manager)
   Omise_Payment_Link?: string;
-  Status: PharmacyOrderStatus;
+  Status: PharmacyOrderStatus | PharmacyOrderStatus[]; // TAGS field returns string[]
   Submitted_At?: string;
 }
 

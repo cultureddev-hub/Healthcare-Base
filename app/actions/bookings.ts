@@ -53,13 +53,13 @@ export async function submitBooking(input: BookingInput): Promise<BookingResult>
   const dataItem = {
     service,
     branch: branch ?? '',
-    date: date ? new Date(date).toISOString() : null,
+    date: date ? new Date(date) : null,
     time: time ?? '',
     fullName: fullName.trim(),
     whatsapp: whatsapp.trim(),
     email: email.trim().toLowerCase(),
     type,
-    submittedAt: new Date().toISOString(),
+    submittedAt: new Date(),
   };
 
   const result = await adminWixClient.items.insert('Bookings', dataItem as Partial<WixDataItem>);

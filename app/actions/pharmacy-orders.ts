@@ -61,7 +61,7 @@ export async function submitPharmacyOrder(
       Delivery_Address: deliveryAddress,
       Cart_Payload: JSON.stringify(cartWithMeta),
       Status: 'Pending_Review',
-      Submitted_At: new Date().toISOString(),
+      Submitted_At: new Date(),
       // Prescription_File: deferred — requires Wix Media Manager upload
     });
 

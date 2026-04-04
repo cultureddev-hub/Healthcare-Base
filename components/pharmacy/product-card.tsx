@@ -19,7 +19,7 @@ export function ProductCard({ product }: ProductCardProps) {
       id: product._id,
       name: product.Item_Name,
       price: product.Price,
-      category: product.Category,
+      category: Array.isArray(product.Category) ? product.Category[0] : product.Category,
       requiresPrescription: product.Requires_Prescription,
     });
 
@@ -39,7 +39,7 @@ export function ProductCard({ product }: ProductCardProps) {
                 : "bg-[#edf9fa] text-[#2d9aa2]"
             }`}
           >
-            {product.Category}
+            {Array.isArray(product.Category) ? product.Category[0] : product.Category}
           </span>
           {product.Requires_Prescription && (
             <span className="flex items-center gap-0.5 text-[10px] font-bold text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded-md">
