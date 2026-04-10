@@ -115,14 +115,15 @@ export interface WixTeamMember extends WixBaseRecord {
 /**
  * Wix CMS: `Testimonials` collection
  * NOT localised — user-generated content stays in original language.
+ *
+ * Actual CMS fields (confirmed via REST API query 2026-04-10):
+ *   patientName, body, rating
+ * No date, branch, or verified fields in the collection.
  */
 export interface WixTestimonial extends WixBaseRecord {
-  name: string;
-  comment: string;
+  patientName: string;
+  body: string;
   rating: number;
-  branch?: string;
-  date?: string;
-  verified?: boolean;
 }
 
 // ── ClinicBlog Collection ─────────────────────────────────────────────────────

@@ -9,9 +9,9 @@
  * for Status transitions from Pending_Review → Approved_Awaiting_Payment and
  * triggers the Omise payment link stub.
  *
- * Note on Prescription_File: Wix Media Manager upload is deferred to a future
- * sprint. The prescription filename is stored as a note inside Cart_Payload.
- * The admin team follows up via WhatsApp to collect the physical prescription.
+ * Note on Prescription_File: Uploaded client-side via getPharmacyUploadUrl()
+ * in app/actions/media.ts. The Wix Media CDN URL is passed in as prescriptionFile
+ * and stored directly in the Prescription_File field.
  *
  * Collection created via Wix MCP on 2026-04-04.
  */

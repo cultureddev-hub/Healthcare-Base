@@ -88,18 +88,16 @@ export async function getTeam({
  * getTestimonials
  *
  * Query the Testimonials collection, most recent first.
+ * CMS fields: patientName, body, rating (no date/branch/verified fields).
  *
- * @param opts.branch    — Filter by branch name
  * @param opts.minRating — Filter by minimum star rating (1–5)
  * @param opts.limit     — Max items to return (default: 10)
  */
 export async function getTestimonials({
-  branch,
   minRating,
   limit = 10,
-}: { branch?: string; minRating?: number; limit?: number } = {}) {
-  let q = wixClient.items.query(COLLECTIONS.testimonials).descending('date').limit(limit);
-  if (branch) q = q.eq('branch', branch);
+}: { minRating?: number; limit?: number } = {}) {
+  let q = wixClient.items.query(COLLECTIONS.testimonials).descending('_createdDate').limit(limit);
   if (minRating !== undefined) q = q.ge('rating', minRating);
   const { items } = await q.find();
   return items;

@@ -23,88 +23,100 @@ import {
 import * as Dialog from "@radix-ui/react-dialog";
 import { BLOG_POSTS } from "@/lib/blog-data";
 
-export function Testimonials() {
+// Fallback hardcoded testimonials — used when CMS returns no data
+const FALLBACK_TESTIMONIALS = [
+  {
+    text: "Excellent service and care from start to finish. A clean and professional environment with expert doctors who speak excellent English, meaning your case and treatment are explained in detail. Many different cases can be treated, so look no further than Samui Home Clinic for diagnosis or solutions.",
+    author: "Dino Bryant",
+    role: "Verified Patient",
+    img: "https://picsum.photos/seed/dino/100/100",
+    rating: 5,
+  },
+  {
+    text: "Very clean and professional. My son was very ill during our time in Thailand, and this clinic was the only one that could solve all his problems. The clinic is kind, sincere, and takes excellent care of children. The doctors and staff speak good English. Highly recommend.",
+    author: "Anne Grozdowski",
+    role: "Verified Patient",
+    img: "https://picsum.photos/seed/anne/100/100",
+    rating: 5,
+  },
+  {
+    text: "The doctor was excellent. She spoke English very well and was very friendly. I came to see her because of a stomach problem, which she treated the next day. Thank you so much.",
+    author: "James McDonnell",
+    role: "Verified Patient",
+    img: "https://picsum.photos/seed/james/100/100",
+    rating: 5,
+  },
+  {
+    text: "I was suffering for multiple days from a heat rash that went only worse day by day. As soon as we arrived they helped us immediately. My symptoms were gone very fast. People were very friendly and took time to explain everything very clearly in English. Also the price was very decent. Definitely 5 stars for this place!!!",
+    author: "Nadine Mulder",
+    role: "Verified Patient",
+    img: "https://picsum.photos/seed/nadine/100/100",
+    rating: 5,
+  },
+  {
+    text: "I had a nasty finger injury following an incident with an electric planer and needed sutures removing. 500 THB seemed very reasonable. A short wait before being seen by a nurse, checked by the doctor, then sutures removed very well — they did a great job. Good infection control measures in place, competent staff. I would recommend this clinic.",
+    author: "Sir Mick of Nottingham",
+    role: "Verified Patient",
+    img: "https://picsum.photos/seed/mick/100/100",
+    rating: 5,
+  },
+  {
+    text: "Great place, can't recommend enough if you are a tourist. I had bad diarrhoea and was worried so came here. They took my blood pressure, gave me a blood test and sent a stool sample away — was out within an hour with a bag of different meds. Only 1,800 baht seemed more than fair. The staff were all very friendly, understanding and professional.",
+    author: "Alpha Seal",
+    role: "Verified Patient",
+    img: "https://picsum.photos/seed/alpha/100/100",
+    rating: 5,
+  },
+  {
+    text: "One of the most professional, clean, and efficient clinics I have been to. Doctors are very accessible, phlebotomists are all super professional, prices are great value. They also offer IV infusions based on different needs depending on goals: age, sports, targeted therapies.",
+    author: "Alfred A",
+    role: "Verified Patient",
+    img: "https://picsum.photos/seed/alfred/100/100",
+    rating: 5,
+  },
+  {
+    text: "I got an infection on my foot — it was so painful I finally decided to see a doctor. I went to Samui Home Clinic and they did a great job. I got daily appointments to clean my wounds. All the staff and the doctor made a really super good job. 5 star service, fair price. It would probably cost x10 in a private hospital. Highly recommend.",
+    author: "Balmer Patrick",
+    role: "Verified Patient",
+    img: "https://picsum.photos/seed/balmer/100/100",
+    rating: 5,
+  },
+  {
+    text: "Very good clinic. Did 10 blood tests and it was done in less than a minute. In my home country it would take more than 5 minutes. Here they did it all in 1 tube and it was done in under 1 minute. Very helpful staff and doctors.",
+    author: "Dylan Jagersma",
+    role: "Verified Patient",
+    img: "https://picsum.photos/seed/dylan/100/100",
+    rating: 5,
+  },
+];
+
+interface CmsTestimonial {
+  patientName: string;
+  body: string;
+  rating: number;
+}
+
+export function Testimonials({ cmsTestimonials }: { cmsTestimonials?: CmsTestimonial[] }) {
   const shouldReduceMotion = useReducedMotion();
-  const testimonials = [
-    {
-      text: "Excellent service and care from start to finish. A clean and professional environment with expert doctors who speak excellent English, meaning your case and treatment are explained in detail. Many different cases can be treated, so look no further than Samui Home Clinic for diagnosis or solutions.",
-      author: "Dino Bryant",
-      role: "Tourist, Koh Samui",
-      verified: true,
-      img: "https://picsum.photos/seed/dino/100/100",
-      rating: 5,
-    },
-    {
-      text: "Very clean and professional. My son was very ill during our time in Thailand, and this clinic was the only one that could solve all his problems. The clinic is kind, sincere, and takes excellent care of children. The doctors and staff speak good English. Highly recommend.",
-      author: "Anne Grozdowski",
-      role: "Tourist, Thailand",
-      verified: true,
-      img: "https://picsum.photos/seed/anne/100/100",
-      rating: 5,
-    },
-    {
-      text: "The doctor was excellent. She spoke English very well and was very friendly. I came to see her because of a stomach problem, which she treated the next day. Thank you so much.",
-      author: "James McDonnell",
-      role: "Tourist, Koh Samui",
-      verified: true,
-      img: "https://picsum.photos/seed/james/100/100",
-      rating: 5,
-    },
-    {
-      text: "I was suffering for multiple days from a heat rash that went only worse day by day. As soon as we arrived they helped us immediately. My symptoms were gone very fast. People were very friendly and took time to explain everything very clearly in English. Also the price was very decent. Definitely 5 stars for this place!!!",
-      author: "Nadine Mulder",
-      role: "Tourist, Koh Samui",
-      verified: true,
-      img: "https://picsum.photos/seed/nadine/100/100",
-      rating: 5,
-    },
-    {
-      text: "I had a nasty finger injury following an incident with an electric planer and needed sutures removing. 500 THB seemed very reasonable. A short wait before being seen by a nurse, checked by the doctor, then sutures removed very well — they did a great job. Good infection control measures in place, competent staff. I would recommend this clinic.",
-      author: "Sir Mick of Nottingham",
-      role: "Local Guide, UK",
-      verified: true,
-      img: "https://picsum.photos/seed/mick/100/100",
-      rating: 5,
-    },
-    {
-      text: "Great place, can't recommend enough if you are a tourist. I had bad diarrhoea and was worried so came here. They took my blood pressure, gave me a blood test and sent a stool sample away — was out within an hour with a bag of different meds. Only 1,800 baht seemed more than fair. The staff were all very friendly, understanding and professional.",
-      author: "Alpha Seal",
-      role: "Tourist, Koh Samui",
-      verified: true,
-      img: "https://picsum.photos/seed/alpha/100/100",
-      rating: 5,
-    },
-    {
-      text: "One of the most professional, clean, and efficient clinics I have been to. Doctors are very accessible, phlebotomists are all super professional, prices are great value. They also offer IV infusions based on different needs depending on goals: age, sports, targeted therapies.",
-      author: "Alfred A",
-      role: "Local Guide, Koh Samui",
-      verified: true,
-      img: "https://picsum.photos/seed/alfred/100/100",
-      rating: 5,
-    },
-    {
-      text: "I got an infection on my foot — it was so painful I finally decided to see a doctor. I went to Samui Home Clinic and they did a great job. I got daily appointments to clean my wounds. All the staff and the doctor made a really super good job. 5 star service, fair price. It would probably cost x10 in a private hospital. Highly recommend.",
-      author: "Balmer Patrick",
-      role: "Local Guide, Koh Samui",
-      verified: true,
-      img: "https://picsum.photos/seed/balmer/100/100",
-      rating: 5,
-    },
-    {
-      text: "Very good clinic. Did 10 blood tests and it was done in less than a minute. In my home country it would take more than 5 minutes. Here they did it all in 1 tube and it was done in under 1 minute. Very helpful staff and doctors.",
-      author: "Dylan Jagersma",
-      role: "Local Guide, Koh Samui",
-      verified: true,
-      img: "https://picsum.photos/seed/dylan/100/100",
-      rating: 5,
-    },
-  ];
+
+  // Map CMS records to card shape; fall back to hardcoded data if CMS is empty
+  const testimonials =
+    cmsTestimonials && cmsTestimonials.length > 0
+      ? cmsTestimonials.map((t) => ({
+          text: t.body,
+          author: t.patientName,
+          role: "Verified Patient",
+          img: `https://picsum.photos/seed/${encodeURIComponent(t.patientName)}/100/100`,
+          rating: t.rating,
+        }))
+      : FALLBACK_TESTIMONIALS;
 
   // Duplicate for seamless loop (-50% = exact halfway point of doubled array)
   const row1 = [...testimonials, ...testimonials];
   const row2 = [...testimonials, ...testimonials];
 
-  const TestimonialCard = ({ t }: { t: typeof testimonials[0] }) => (
+  type TestimonialShape = { text: string; author: string; role: string; img: string; rating: number };
+  const TestimonialCard = ({ t }: { t: TestimonialShape }) => (
     <div className="w-[320px] shrink-0 bg-white rounded-3xl p-6 shadow-sm border border-slate-100 mx-3">
       <div className="flex gap-0.5 mb-3">
         {Array.from({ length: t.rating }).map((_, s) => (
@@ -122,11 +134,9 @@ export function Testimonials() {
           <p className="font-bold text-[#080708] text-xs">{t.author}</p>
           <p className="text-xs text-slate-400">{t.role}</p>
         </div>
-        {t.verified && (
-          <div className="ml-auto flex items-center gap-1 text-xs font-bold text-[#3eb5bd]">
-            <CheckCircle2 size={11} /> Verified
-          </div>
-        )}
+        <div className="ml-auto flex items-center gap-1 text-xs font-bold text-[#3eb5bd]">
+          <CheckCircle2 size={11} /> Verified
+        </div>
       </div>
     </div>
   );

@@ -514,7 +514,7 @@ export function PickUpBookingModal({ onClose }: { onClose: () => void }) {
             </div>
             <div className="space-y-1">
               <label htmlFor="pickup-whatsapp" className="text-xs font-bold text-slate-400 uppercase tracking-wider">WhatsApp Number</label>
-              <input id="pickup-whatsapp" type="tel" placeholder="+66 000 000 0000" required value={formData.whatsapp} onChange={e => setFormData({...formData, whatsapp: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-base outline-none focus:ring-2 focus:ring-[#3eb5bd]"/>
+              <input id="pickup-whatsapp" type="tel" inputMode="tel" placeholder="+66 000 000 0000" required value={formData.whatsapp} onChange={e => setFormData({...formData, whatsapp: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-base outline-none focus:ring-2 focus:ring-[#3eb5bd]"/>
             </div>
             <div className="space-y-1">
               <label htmlFor="pickup-address" className="text-xs font-bold text-slate-400 uppercase tracking-wider">Pick-up Address</label>
@@ -688,7 +688,7 @@ export function HomeVisitBookingModal({ onClose }: { onClose: () => void }) {
             </div>
             <div className="space-y-1">
               <label htmlFor="homevisit-whatsapp" className="text-xs font-bold text-slate-400 uppercase tracking-wider">WhatsApp Number</label>
-              <input id="homevisit-whatsapp" type="tel" placeholder="+66 000 000 0000" required value={formData.whatsapp} onChange={e => setFormData({...formData, whatsapp: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-base outline-none focus:ring-2 focus:ring-[#3eb5bd]"/>
+              <input id="homevisit-whatsapp" type="tel" inputMode="tel" placeholder="+66 000 000 0000" required value={formData.whatsapp} onChange={e => setFormData({...formData, whatsapp: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-base outline-none focus:ring-2 focus:ring-[#3eb5bd]"/>
             </div>
             <div className="space-y-1">
               <label htmlFor="homevisit-email" className="text-xs font-bold text-slate-400 uppercase tracking-wider">Email Address</label>
@@ -877,7 +877,7 @@ export function OnlineConsultBookingModal({ onClose }: { onClose: () => void }) 
             </div>
             <div className="space-y-1">
               <label htmlFor="consult-whatsapp" className="text-xs font-bold text-slate-400 uppercase tracking-wider">WhatsApp Number</label>
-              <input id="consult-whatsapp" type="tel" placeholder="+66 000 000 0000" required value={formData.whatsapp} onChange={e => setFormData({...formData, whatsapp: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-base outline-none focus:ring-2 focus:ring-[#3eb5bd]"/>
+              <input id="consult-whatsapp" type="tel" inputMode="tel" placeholder="+66 000 000 0000" required value={formData.whatsapp} onChange={e => setFormData({...formData, whatsapp: e.target.value})} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-base outline-none focus:ring-2 focus:ring-[#3eb5bd]"/>
             </div>
             {/* PDPA Consent — COMP-01 */}
             <label className="flex items-start gap-3 cursor-pointer mt-2">
