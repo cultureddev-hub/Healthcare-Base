@@ -15,17 +15,20 @@ import {
 } from "lucide-react";
 import { useBooking } from "./booking-context";
 import { CustomSelect } from "./custom-select";
+import { getBookedSlots } from "@/app/actions/cms";
 
 export function BookingCalendar({
   selectedDate,
   onDateSelect,
   selectedTime,
   onTimeSelect,
+  bookedTimes = [],
 }: {
   selectedDate: Date | null;
   onDateSelect: (d: Date) => void;
   selectedTime: string;
   onTimeSelect: (t: string) => void;
+  bookedTimes?: string[];
 }) {
   const [viewDate, setViewDate] = useState(() => new Date());
 
@@ -126,19 +129,27 @@ export function BookingCalendar({
       <div className="md:w-36 border-t md:border-t-0 md:border-l border-white/10 max-h-64 overflow-y-auto p-3 no-scrollbar">
         <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 px-1">Time</p>
         <div className="grid gap-1">
-          {timeSlots.map((t) => (
-            <button
-              key={t}
-              onClick={() => onTimeSelect(t)}
-              className={`text-xs min-h-[44px] px-2 rounded-lg border transition-all text-left cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#3eb5bd] ${
-                selectedTime === t
-                  ? "bg-[#3eb5bd]/20 border-[#3eb5bd] text-[#7fd3d7] font-semibold"
-                  : "bg-white/5 border-white/10 hover:bg-white/10 text-slate-400 hover:text-white"
-              }`}
-            >
-              {t}
-            </button>
-          ))}
+          {timeSlots.map((t) => {
+            const isBooked = bookedTimes.includes(t);
+            return (
+              <button
+                key={t}
+                onClick={() => !isBooked && onTimeSelect(t)}
+                disabled={isBooked}
+                aria-label={isBooked ? `${t} — already booked` : t}
+                aria-disabled={isBooked}
+                className={`text-xs min-h-[44px] px-2 rounded-lg border transition-all text-left focus:outline-none focus:ring-1 focus:ring-[#3eb5bd] ${
+                  isBooked
+                    ? "opacity-30 line-through cursor-not-allowed text-slate-500 border-white/5 bg-transparent"
+                    : selectedTime === t
+                    ? "bg-[#3eb5bd]/20 border-[#3eb5bd] text-[#7fd3d7] font-semibold cursor-pointer"
+                    : "bg-white/5 border-white/10 hover:bg-white/10 text-slate-400 hover:text-white cursor-pointer"
+                }`}
+              >
+                {t}
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>
@@ -163,6 +174,21 @@ export function BookingForm({ isModal = false }: { isModal?: boolean }) {
   const [branch, setBranch] = useState("");
   const [date, setDate] = useState<Date | null>(null);
   const [time, setTime] = useState("");
+  const [bookedTimes, setBookedTimes] = useState<string[]>([]);
+
+  // Fetch booked slots when date + branch are both set (not for Home Visit)
+  useEffect(() => {
+    if (!date || !branch || branch === "Home Visit") {
+      setBookedTimes([]);
+      return;
+    }
+    setBookedTimes([]);
+    setTime("");
+    const dateStr = date.toISOString().split("T")[0];
+    getBookedSlots(dateStr, branch)
+      .then(setBookedTimes)
+      .catch(() => {}); // fail silently — never block the booking form
+  }, [date, branch]);
 
   // Step 3 State
   const [formData, setFormData] = useState({
@@ -623,6 +649,7 @@ export function BookingForm({ isModal = false }: { isModal?: boolean }) {
                           onDateSelect={setDate}
                           selectedTime={time}
                           onTimeSelect={setTime}
+                          bookedTimes={bookedTimes}
                         />
                         {date && time && (
                           <p className="mt-3 text-xs text-slate-400 text-center">

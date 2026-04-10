@@ -226,7 +226,7 @@ export interface PharmacyOrderInput {
   whatsappNumber: string;
   deliveryAddress: string;
   cartItems: CartItem[];
-  prescriptionFilename?: string; // filename only — actual file upload is future work
+  prescriptionFile?: string; // Wix Media CDN URL — set after successful client-side upload
 }
 
 // ── Frontend ServiceItem (hardcoded SERVICES_DATA) ────────────────────────────

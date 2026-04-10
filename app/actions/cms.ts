@@ -18,7 +18,7 @@
 
 'use server';
 
-import { wixClient } from '@/lib/wix-client';
+import { wixClient, adminWixClient } from '@/lib/wix-client';
 
 // ── Collection ID constants ───────────────────────────────────────────────────
 
@@ -137,4 +137,33 @@ export async function getBlogPostBySlug(slug: string) {
     .limit(1)
     .find();
   return items[0] ?? null;
+}
+
+/**
+ * getBookedSlots
+ *
+ * Returns the booked time strings for a given date + branch.
+ * Used by the booking form DateTimePicker to grey out unavailable slots.
+ * Home Visit bookings are excluded from the slot check (not slot-constrained).
+ *
+ * @param date   — ISO date string e.g. "2026-04-15"
+ * @param branch — Branch name e.g. "Chaweng", "Bangrak", "Rajabhat University"
+ * @returns string[] of booked times e.g. ["09:15", "11:00"]
+ */
+export async function getBookedSlots(date: string, branch: string): Promise<string[]> {
+  const start = new Date(date);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(date);
+  end.setHours(23, 59, 59, 999);
+
+  const { items } = await adminWixClient.items
+    .query('Bookings')
+    .eq('branch', branch)
+    .ge('date', start)
+    .le('date', end)
+    .find();
+
+  return items
+    .map((item: Record<string, unknown>) => item.time as string)
+    .filter(Boolean);
 }

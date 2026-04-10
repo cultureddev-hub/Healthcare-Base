@@ -60,6 +60,7 @@ export async function submitBooking(input: BookingInput): Promise<BookingResult>
     email: email.trim().toLowerCase(),
     type,
     submittedAt: new Date(),
+    Status: 'Pending', // TAGS field — lifecycle: Pending → Confirmed | Cancelled → No_Show
   };
 
   const result = await adminWixClient.items.insert('Bookings', dataItem as Partial<WixDataItem>);

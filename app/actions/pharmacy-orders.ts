@@ -40,17 +40,11 @@ export interface SubmitOrderResult {
 export async function submitPharmacyOrder(
   input: PharmacyOrderInput
 ): Promise<SubmitOrderResult> {
-  const { patientName, whatsappNumber, deliveryAddress, cartItems, prescriptionFilename } = input;
+  const { patientName, whatsappNumber, deliveryAddress, cartItems, prescriptionFile } = input;
 
-  // Build the cart payload JSON — include prescription note if applicable
-  const hasRxItems = cartItems.some((item: CartItem) => item.requiresPrescription);
+  // Build the cart payload JSON
   const cartWithMeta = {
     items: cartItems,
-    prescriptionNote: prescriptionFilename
-      ? `Prescription uploaded by patient: ${prescriptionFilename}`
-      : hasRxItems
-      ? 'AWAITING PRESCRIPTION — Rx items in cart, prescription not yet uploaded'
-      : null,
     submittedAt: new Date().toISOString(),
   };
 
@@ -60,9 +54,9 @@ export async function submitPharmacyOrder(
       WhatsApp_Number: whatsappNumber,
       Delivery_Address: deliveryAddress,
       Cart_Payload: JSON.stringify(cartWithMeta),
+      Prescription_File: prescriptionFile ?? null,
       Status: 'Pending_Review',
       Submitted_At: new Date(),
-      // Prescription_File: deferred — requires Wix Media Manager upload
     });
 
     console.log(

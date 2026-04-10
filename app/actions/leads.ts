@@ -12,9 +12,9 @@
  * for server-side CRM writes. Using wixClient (OAuthStrategy) was replaced
  * because visitor-level OAuth tokens may lack the required permission scope.
  *
- * allowDuplicates: true — repeat patients (e.g. annual check-ups, returning tourists)
- * will re-submit their details. Creating a new CRM record per booking is intentional
- * so staff can track visit history. Deduplication is handled at the CRM dashboard level.
+ * Deduplication: appendOrCreateContact() matches on email or phone. If the contact
+ * already exists it appends the new source and returns the existing _id — no duplicate
+ * CRM records for returning patients (annual check-ups, repeat tourists, etc.).
  *
  * Architecture: Wix Headless (Vercel/Next.js) — see BUILD_LOG_2.1.md
  */
@@ -65,9 +65,7 @@ export async function createLead(input: LeadInput): Promise<LeadResult> {
       : undefined,
   };
 
-  const result = await adminWixClient.contacts.createContact(contactInfo, {
-    allowDuplicates: true,
-  });
+  const result = await adminWixClient.contacts.appendOrCreateContact({ contactInfo });
 
   return { success: true, contactId: result.contact?._id ?? '' };
 }

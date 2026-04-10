@@ -7,6 +7,7 @@ import Image from "next/image";
 
 import { useBooking } from "./booking-context";
 import { LanguageToggle } from "./language-toggle";
+import { useLocale } from "@/hooks/use-locale";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -139,6 +140,7 @@ export function Navbar() {
 }
 
 export function Footer() {
+  const locale = useLocale();
   return (
     <footer className="bg-[#080708] text-slate-300 py-16 border-t border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -263,20 +265,17 @@ export function Footer() {
             <h4 className="text-white font-semibold mb-4">Legal</h4>
             <ul className="space-y-3 text-sm">
               <li>
-                {/* TODO: /privacy */}
-                <a href="#" className="hover:text-white transition-colors">
+                <a href={`/${locale}/privacy`} className="hover:text-white transition-colors">
                   Privacy Policy
                 </a>
               </li>
               <li>
-                {/* TODO: /terms */}
-                <a href="#" className="hover:text-white transition-colors">
+                <a href={`/${locale}/terms`} className="hover:text-white transition-colors">
                   Terms of Service
                 </a>
               </li>
               <li>
-                {/* TODO: /cookies */}
-                <a href="#" className="hover:text-white transition-colors">
+                <a href={`/${locale}/cookies`} className="hover:text-white transition-colors">
                   Cookie Policy
                 </a>
               </li>

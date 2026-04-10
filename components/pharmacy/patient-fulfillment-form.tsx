@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useCart } from "@/lib/store/cart-store";
 import { submitPharmacyOrder } from "@/app/actions/pharmacy-orders";
+import { getPharmacyUploadUrl } from "@/app/actions/media";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -41,6 +42,8 @@ export function PatientFulfillmentForm() {
     pdpaConsent: false,
   });
   const [prescriptionFile, setPrescriptionFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [orderId, setOrderId] = useState<string | null>(null);
@@ -76,13 +79,41 @@ export function PatientFulfillmentForm() {
 
     setSubmitState("loading");
     setErrorMsg("");
+    setUploadError("");
+
+    // Upload prescription file to Wix Media Manager if one was selected
+    let prescriptionUrl: string | undefined;
+    if (prescriptionFile) {
+      try {
+        setIsUploading(true);
+        const { uploadUrl, uploadToken } = await getPharmacyUploadUrl(
+          prescriptionFile.name,
+          prescriptionFile.type || 'application/octet-stream'
+        );
+        const uploadRes = await fetch(uploadUrl, {
+          method: 'PUT',
+          headers: { Authorization: uploadToken },
+          body: prescriptionFile,
+        });
+        if (!uploadRes.ok) throw new Error(`Upload failed: ${uploadRes.status}`);
+        const uploadData = await uploadRes.json();
+        prescriptionUrl = uploadData?.file?.url ?? uploadData?.url;
+      } catch (err) {
+        setUploadError('Prescription upload failed. Please try again.');
+        setSubmitState('error');
+        setIsUploading(false);
+        return;
+      } finally {
+        setIsUploading(false);
+      }
+    }
 
     const result = await submitPharmacyOrder({
       patientName: form.patientName.trim(),
       whatsappNumber: form.whatsappNumber.trim(),
       deliveryAddress: form.deliveryAddress.trim(),
       cartItems: items,
-      prescriptionFilename: prescriptionFile?.name,
+      prescriptionFile: prescriptionUrl,
     });
 
     if (result.success) {
@@ -347,14 +378,24 @@ export function PatientFulfillmentForm() {
                 </label>
                 <button
                   type="button"
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={() => !isUploading && fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  aria-busy={isUploading}
                   className={`w-full border-2 border-dashed rounded-xl px-4 py-4 text-sm transition-all flex flex-col items-center gap-2 ${
-                    prescriptionFile
-                      ? "border-emerald-500/40 bg-emerald-500/5 text-emerald-400"
-                      : "border-white/20 bg-white/5 text-white/50 hover:border-[#3eb5bd]/50 hover:text-white/70"
+                    isUploading
+                      ? "border-[#3eb5bd]/40 bg-[#3eb5bd]/5 text-[#3eb5bd] cursor-wait"
+                      : prescriptionFile
+                      ? "border-emerald-500/40 bg-emerald-500/5 text-emerald-400 cursor-pointer"
+                      : "border-white/20 bg-white/5 text-white/50 hover:border-[#3eb5bd]/50 hover:text-white/70 cursor-pointer"
                   }`}
                 >
-                  {prescriptionFile ? (
+                  {isUploading ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin text-[#3eb5bd]" />
+                      <span className="font-medium">Uploading prescription&hellip;</span>
+                      <span className="text-xs text-white/40">Please wait</span>
+                    </>
+                  ) : prescriptionFile ? (
                     <>
                       <CheckCircle2 size={18} className="text-emerald-400" />
                       <span className="font-medium">{prescriptionFile.name}</span>
@@ -368,8 +409,14 @@ export function PatientFulfillmentForm() {
                     </>
                   )}
                 </button>
+                {uploadError && (
+                  <p className="mt-1.5 text-xs text-red-400" role="alert">
+                    {uploadError}
+                  </p>
+                )}
                 <input
                   ref={fileInputRef}
+                  id="prescription-file"
                   type="file"
                   accept="image/*,.pdf"
                   className="hidden"
@@ -428,15 +475,21 @@ export function PatientFulfillmentForm() {
           {/* Submit */}
           <motion.button
             type="submit"
-            disabled={!isValid || submitState === "loading"}
-            whileTap={isValid ? { scale: 0.98 } : {}}
+            disabled={!isValid || submitState === "loading" || isUploading}
+            aria-busy={submitState === "loading" || isUploading}
+            whileTap={isValid && !isUploading ? { scale: 0.98 } : {}}
             className={`w-full mt-5 py-4 rounded-xl font-semibold text-base transition-all flex items-center justify-center gap-2 ${
-              isValid && submitState !== "loading"
-                ? "bg-[#3eb5bd] hover:bg-[#35a0a8] text-white shadow-lg shadow-[#3eb5bd]/25 hover:-translate-y-0.5"
+              isValid && submitState !== "loading" && !isUploading
+                ? "bg-[#3eb5bd] hover:bg-[#35a0a8] text-white shadow-lg shadow-[#3eb5bd]/25 hover:-translate-y-0.5 cursor-pointer"
                 : "bg-white/10 text-white/30 cursor-not-allowed"
             }`}
           >
-            {submitState === "loading" ? (
+            {isUploading ? (
+              <>
+                <Loader2 size={18} className="animate-spin" />
+                Uploading Prescription…
+              </>
+            ) : submitState === "loading" ? (
               <>
                 <Loader2 size={18} className="animate-spin" />
                 Submitting Request…
