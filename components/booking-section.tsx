@@ -23,12 +23,14 @@ export function BookingCalendar({
   selectedTime,
   onTimeSelect,
   bookedTimes = [],
+  isFetchingSlots = false,
 }: {
   selectedDate: Date | null;
   onDateSelect: (d: Date) => void;
   selectedTime: string;
   onTimeSelect: (t: string) => void;
   bookedTimes?: string[];
+  isFetchingSlots?: boolean;
 }) {
   const [viewDate, setViewDate] = useState(() => new Date());
 
@@ -128,6 +130,12 @@ export function BookingCalendar({
       {/* Time slots side */}
       <div className="md:w-36 border-t md:border-t-0 md:border-l border-white/10 max-h-64 overflow-y-auto p-3 no-scrollbar">
         <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 px-1">Time</p>
+        {isFetchingSlots && (
+          <div className="flex items-center gap-2 px-1 py-2 text-slate-500 text-xs" aria-live="polite" aria-label="Checking availability">
+            <svg className="animate-spin h-3 w-3 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+            Checking…
+          </div>
+        )}
         <div className="grid gap-1">
           {timeSlots.map((t) => {
             const isBooked = bookedTimes.includes(t);
@@ -175,6 +183,7 @@ export function BookingForm({ isModal = false }: { isModal?: boolean }) {
   const [date, setDate] = useState<Date | null>(null);
   const [time, setTime] = useState("");
   const [bookedTimes, setBookedTimes] = useState<string[]>([]);
+  const [isFetchingSlots, setIsFetchingSlots] = useState(false);
 
   // Fetch booked slots when date + branch are both set (not for Home Visit)
   useEffect(() => {
@@ -184,10 +193,12 @@ export function BookingForm({ isModal = false }: { isModal?: boolean }) {
     }
     setBookedTimes([]);
     setTime("");
+    setIsFetchingSlots(true);
     const dateStr = date.toISOString().split("T")[0];
     getBookedSlots(dateStr, branch)
       .then(setBookedTimes)
-      .catch(() => {}); // fail silently — never block the booking form
+      .catch(() => {}) // fail silently — never block the booking form
+      .finally(() => setIsFetchingSlots(false));
   }, [date, branch]);
 
   // Step 3 State
@@ -650,6 +661,7 @@ export function BookingForm({ isModal = false }: { isModal?: boolean }) {
                           selectedTime={time}
                           onTimeSelect={setTime}
                           bookedTimes={bookedTimes}
+                          isFetchingSlots={isFetchingSlots}
                         />
                         {date && time && (
                           <p className="mt-3 text-xs text-slate-400 text-center">
@@ -715,6 +727,7 @@ export function BookingForm({ isModal = false }: { isModal?: boolean }) {
                           <input
                             id="booking-whatsapp"
                             type="tel"
+                            inputMode="tel"
                             placeholder="+66 000 000 0000"
                             required
                             value={formData.whatsapp}
@@ -905,7 +918,7 @@ export function BookingForm({ isModal = false }: { isModal?: boolean }) {
                       </button>
 
                       {submitError && (
-                        <p className="text-sm text-red-400 text-center mt-3">{submitError}</p>
+                        <p role="alert" className="text-sm text-red-400 text-center mt-3">{submitError}</p>
                       )}
                     </form>
                   </motion.div>

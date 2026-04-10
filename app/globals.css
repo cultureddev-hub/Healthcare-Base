@@ -1,6 +1,24 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* ── Z-index scale ────────────────────────────────────────────────────────── */
+/* Defined here so all layers are predictable and avoidable in one place.
+   Layer    z    Usage
+   ──────  ───  ──────────────────────────────────────────────────────────────
+   base     10  Sticky section headers, floating badges
+   nav      30  Navbar (fixed)
+   dropdown 40  Custom selects, search dropdowns
+   modal    50  Radix dialogs (overlay + content)
+   fab     200  Cart FAB — must always sit above any open modal
+*/
+@theme {
+  --z-base: 10;
+  --z-nav: 30;
+  --z-dropdown: 40;
+  --z-modal: 50;
+  --z-fab: 200;
+}
+
 html {
   scroll-behavior: smooth;
 }

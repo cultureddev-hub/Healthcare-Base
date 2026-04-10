@@ -112,7 +112,7 @@ export function About() {
                         className="fixed left-[50%] top-[50%] z-50 w-full max-w-4xl -translate-x-[50%] -translate-y-[50%] bg-white rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto"
                       >
                         <div className="relative h-64 md:h-80 w-full">
-                          <Image src="https://picsum.photos/seed/clinicexterior/1200/600" alt="Clinic Exterior" fill className="object-cover" referrerPolicy="no-referrer" />
+                          <Image src="https://static.wixstatic.com/media/d79cb0_322bfe25282b4d75b61395f568ce426b~mv2.jpg/v1/fill/w_1200,h_480,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/SHC_Banner.jpg" alt="Samui Home Clinic — clinic team and facility" fill className="object-cover" />
                           <div className="absolute inset-0 bg-gradient-to-t from-[#080708]/80 to-transparent"></div>
                           <div className="absolute bottom-8 left-8 right-8 text-white">
                             <Dialog.Title className="text-3xl md:text-4xl font-heading font-bold mb-2">Samui Home Clinic</Dialog.Title>
@@ -190,9 +190,8 @@ export function About() {
                               </div>
                               
                               <div className="bg-[#edf9fa] p-6 rounded-2xl border border-[#c9eff2]">
-                                <h3 className="font-bold text-[#0d4a4e] mb-2">Need immediate assistance?</h3>
-                                <p className="text-sm text-[#2d9aa2] mb-4">Our emergency line is open 24/7.</p>
-                                <a href="tel:+660806696915" className="block w-full text-center bg-[#3eb5bd] hover:bg-[#35a0a8] text-white py-3 rounded-xl font-bold transition-colors">
+                                <h3 className="font-bold text-[#0d4a4e] mb-4">Need immediate assistance?</h3>
+                                <a href="tel:+660806696915" className="block w-full text-center bg-[#3eb5bd] hover:bg-[#35a0a8] text-white py-3 rounded-xl font-bold transition-colors whitespace-nowrap">
                                   Call +66 080-669-6915
                                 </a>
                               </div>

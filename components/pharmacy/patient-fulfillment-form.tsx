@@ -166,7 +166,7 @@ export function PatientFulfillmentForm() {
               contacted on WhatsApp once your order is approved and a payment link is ready.
             </p>
             {orderId && (
-              <p className="text-white/40 text-xs font-mono mt-1">
+              <p className="text-white/60 text-xs font-mono mt-1">
                 Reference: {orderId.slice(0, 8).toUpperCase()}
               </p>
             )}
@@ -220,7 +220,7 @@ export function PatientFulfillmentForm() {
             transition={{ delay: 0.55 }}
             className="mt-6 w-full max-w-sm"
           >
-            <p className="text-white/40 text-xs text-center mb-3">
+            <p className="text-white/60 text-xs text-center mb-3">
               Questions? Message our pharmacist directly
             </p>
             <a
@@ -273,7 +273,7 @@ export function PatientFulfillmentForm() {
                         <FlaskConical size={11} className="text-rose-400 shrink-0" />
                       )}
                       {item.name}
-                      <span className="text-white/40">× {item.quantity}</span>
+                      <span className="text-white/60">× {item.quantity}</span>
                     </span>
                     <span className="text-white font-semibold shrink-0">
                       ฿{(item.price * item.quantity).toLocaleString()}
@@ -312,7 +312,7 @@ export function PatientFulfillmentForm() {
                 placeholder="Your full name"
                 required
                 autoComplete="name"
-                className="w-full bg-white/10 border border-white/20 text-white placeholder:text-white/40 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#3eb5bd] focus:ring-2 focus:ring-[#3eb5bd]/25 transition-all"
+                className="w-full bg-white/10 border border-white/20 text-white placeholder:text-white/60 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#3eb5bd] focus:ring-2 focus:ring-[#3eb5bd]/25 transition-all"
               />
             </div>
 
@@ -333,12 +333,13 @@ export function PatientFulfillmentForm() {
                   id="whatsappNumber"
                   name="whatsappNumber"
                   type="tel"
+                  inputMode="tel"
                   value={form.whatsappNumber}
                   onChange={handleChange}
                   placeholder="80 123 4567"
                   required
                   autoComplete="tel"
-                  className="flex-1 bg-white/10 border border-white/20 text-white placeholder:text-white/40 rounded-r-xl px-4 py-3 text-sm outline-none focus:border-[#3eb5bd] focus:ring-2 focus:ring-[#3eb5bd]/25 transition-all"
+                  className="flex-1 bg-white/10 border border-white/20 text-white placeholder:text-white/60 rounded-r-xl px-4 py-3 text-sm outline-none focus:border-[#3eb5bd] focus:ring-2 focus:ring-[#3eb5bd]/25 transition-all"
                 />
               </div>
             </div>
@@ -360,7 +361,7 @@ export function PatientFulfillmentForm() {
                 placeholder="Hotel name / room, villa address, or street address on Koh Samui"
                 required
                 rows={3}
-                className="w-full bg-white/10 border border-white/20 text-white placeholder:text-white/40 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#3eb5bd] focus:ring-2 focus:ring-[#3eb5bd]/25 transition-all resize-none"
+                className="w-full bg-white/10 border border-white/20 text-white placeholder:text-white/60 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#3eb5bd] focus:ring-2 focus:ring-[#3eb5bd]/25 transition-all resize-none"
               />
             </div>
 
@@ -393,19 +394,19 @@ export function PatientFulfillmentForm() {
                     <>
                       <Loader2 size={18} className="animate-spin text-[#3eb5bd]" />
                       <span className="font-medium">Uploading prescription&hellip;</span>
-                      <span className="text-xs text-white/40">Please wait</span>
+                      <span className="text-xs text-white/60">Please wait</span>
                     </>
                   ) : prescriptionFile ? (
                     <>
                       <CheckCircle2 size={18} className="text-emerald-400" />
                       <span className="font-medium">{prescriptionFile.name}</span>
-                      <span className="text-xs text-white/40">Click to change</span>
+                      <span className="text-xs text-white/60">Click to change</span>
                     </>
                   ) : (
                     <>
                       <Upload size={18} />
                       <span>Click to upload your prescription</span>
-                      <span className="text-xs text-white/30">JPG, PNG or PDF — max 10 MB</span>
+                      <span className="text-xs text-white/50">JPG, PNG or PDF — max 10 MB</span>
                     </>
                   )}
                 </button>
@@ -464,7 +465,7 @@ export function PatientFulfillmentForm() {
           </AnimatePresence>
 
           {/* Security note */}
-          <div className="flex items-center gap-2 mt-4 text-white/30 text-xs">
+          <div className="flex items-center gap-2 mt-4 text-white/50 text-xs">
             <ShieldCheck size={13} />
             <span>
               No payment details collected here. A payment link will be sent to
@@ -481,7 +482,7 @@ export function PatientFulfillmentForm() {
             className={`w-full mt-5 py-4 rounded-xl font-semibold text-base transition-all flex items-center justify-center gap-2 ${
               isValid && submitState !== "loading" && !isUploading
                 ? "bg-[#3eb5bd] hover:bg-[#35a0a8] text-white shadow-lg shadow-[#3eb5bd]/25 hover:-translate-y-0.5 cursor-pointer"
-                : "bg-white/10 text-white/30 cursor-not-allowed"
+                : "bg-white/10 text-white/50 cursor-not-allowed"
             }`}
           >
             {isUploading ? (
